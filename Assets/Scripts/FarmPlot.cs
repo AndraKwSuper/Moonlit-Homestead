@@ -18,7 +18,14 @@ namespace MoonlitHomestead
         [SerializeField] private PlotState currentState = PlotState.Untilled;
         [SerializeField] private SpriteRenderer spriteRenderer;
 
-        [Header("Visuals")]
+        [Header("Visuals - Sprites (Prioritas)")]
+        [SerializeField] private Sprite untilledSprite;
+        [SerializeField] private Sprite tilledSprite;
+        [SerializeField] private Sprite plantedSprite;
+        [SerializeField] private Sprite mutatedSprite;
+        [SerializeField] private Sprite resonatedSprite;
+
+        [Header("Visuals - Prototype Color Fallback")]
         [SerializeField] private Color untilledColor = new Color(0.5f, 0.4f, 0.3f);
         [SerializeField] private Color tilledColor = new Color(0.35f, 0.25f, 0.15f);
         [SerializeField] private Color plantedColor = new Color(0.2f, 0.6f, 0.3f);
@@ -169,23 +176,31 @@ namespace MoonlitHomestead
         {
             if (spriteRenderer == null) return;
 
+            Sprite targetSprite = null;
             switch (currentState)
             {
-                case PlotState.Untilled:
-                    spriteRenderer.color = untilledColor;
-                    break;
-                case PlotState.Tilled:
-                    spriteRenderer.color = tilledColor;
-                    break;
-                case PlotState.Planted:
-                    spriteRenderer.color = plantedColor;
-                    break;
-                case PlotState.Mutated:
-                    spriteRenderer.color = mutatedColor;
-                    break;
-                case PlotState.Resonated:
-                    spriteRenderer.color = resonatedColor;
-                    break;
+                case PlotState.Untilled: targetSprite = untilledSprite; break;
+                case PlotState.Tilled: targetSprite = tilledSprite; break;
+                case PlotState.Planted: targetSprite = plantedSprite; break;
+                case PlotState.Mutated: targetSprite = mutatedSprite; break;
+                case PlotState.Resonated: targetSprite = resonatedSprite; break;
+            }
+
+            if (targetSprite != null)
+            {
+                spriteRenderer.sprite = targetSprite;
+                spriteRenderer.color = Color.white; // Jangan tint sprite asli
+            }
+            else
+            {
+                switch (currentState)
+                {
+                    case PlotState.Untilled: spriteRenderer.color = untilledColor; break;
+                    case PlotState.Tilled: spriteRenderer.color = tilledColor; break;
+                    case PlotState.Planted: spriteRenderer.color = plantedColor; break;
+                    case PlotState.Mutated: spriteRenderer.color = mutatedColor; break;
+                    case PlotState.Resonated: spriteRenderer.color = resonatedColor; break;
+                }
             }
         }
     }

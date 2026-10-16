@@ -46,6 +46,7 @@ namespace MoonlitHomestead
         public event Action<int, InventoryItem> OnItemSelected;
 
         public int SelectedIndex => selectedIndex;
+        public InventoryItem[] Items => items;
         public InventoryItem CurrentItem => (items != null && selectedIndex >= 0 && selectedIndex < items.Length) ? items[selectedIndex] : null;
 
         private void Awake()

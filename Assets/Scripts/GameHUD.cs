@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace MoonlitHomestead
 {
@@ -15,6 +16,7 @@ namespace MoonlitHomestead
         [Header("Stability Bar UI")]
         [SerializeField] private Slider stabilitySlider;
         [SerializeField] private Image stabilityFill;
+        [SerializeField] private TMP_Text stabilityText;
 
         [Header("Dialogue / Notification UI")]
         [SerializeField] private GameObject dialoguePanel;
@@ -107,6 +109,11 @@ namespace MoonlitHomestead
             {
                 stabilityFill = stabilitySlider.fillRect.GetComponent<Image>();
             }
+            if (stabilityText == null)
+            {
+                var go = GameObject.Find("StabilityText");
+                if (go != null) stabilityText = go.GetComponent<TMP_Text>();
+            }
             if (dialoguePanel == null)
             {
                 dialoguePanel = GameObject.Find("DialoguePanel");
@@ -137,6 +144,7 @@ namespace MoonlitHomestead
             {
                 RealityStabilitySystem.Instance.OnStabilityChanged -= HandleStabilityChanged;
                 RealityStabilitySystem.Instance.OnStabilityChanged += HandleStabilityChanged;
+                HandleStabilityChanged(RealityStabilitySystem.Instance.CurrentStability, RealityStabilitySystem.Instance.MaxStability);
             }
 
             if (InventoryHotbar.Instance != null)
@@ -224,10 +232,14 @@ namespace MoonlitHomestead
                 stabilitySlider.value = current;
             }
 
-            if (stabilityFill != null)
+            float ratio = (max > 0f) ? Mathf.Clamp01(current / max) : 0f;
+
+            // Warna fill dibiarkan sesuai sprite/warna aslinya di Inspector
+
+            if (stabilityText != null)
             {
-                float ratio = (max > 0f) ? current / max : 0f;
-                stabilityFill.color = Color.Lerp(new Color(0.7f, 0.1f, 0.1f), new Color(0.2f, 0.8f, 0.6f), ratio);
+                int percent = Mathf.RoundToInt(ratio * 100f);
+                stabilityText.text = $"{percent}%";
             }
         }
 
