@@ -3,12 +3,36 @@ using UnityEngine;
 
 namespace MoonlitHomestead
 {
+    public enum ItemType
+    {
+        None,
+        Hoe,
+        Seed,
+        WateringCan,
+        Watch,
+        Journal
+    }
+
     [System.Serializable]
     public class InventoryItem
     {
+        public ItemType type = ItemType.None;
         public string id;
         public string displayName;
         public Sprite icon;
+
+        public ItemType Type
+        {
+            get
+            {
+                if (type != ItemType.None) return type;
+                if (!string.IsNullOrEmpty(id) && Enum.TryParse<ItemType>(id, true, out var parsed))
+                {
+                    return parsed;
+                }
+                return ItemType.None;
+            }
+        }
     }
 
     public class InventoryHotbar : MonoBehaviour
@@ -34,15 +58,15 @@ namespace MoonlitHomestead
             Instance = this;
 
             // Default items jika belum diisi di Inspector
-            if (items == null || items.Length == 0 || items[0] == null || string.IsNullOrEmpty(items[0].id))
+            if (items == null || items.Length == 0 || items[0] == null || (items[0].type == ItemType.None && string.IsNullOrEmpty(items[0].id)))
             {
                 items = new InventoryItem[]
                 {
-                    new InventoryItem { id = "Hoe", displayName = "Cangkul (Hoe)" },
-                    new InventoryItem { id = "Seed", displayName = "Bibit Anomali (Seed)" },
-                    new InventoryItem { id = "WateringCan", displayName = "Penyiram (Watering Can)" },
-                    new InventoryItem { id = "Watch", displayName = "Jam Saku (Pocket Watch)" },
-                    new InventoryItem { id = "Journal", displayName = "Jurnal (Journal)" }
+                    new InventoryItem { id = "Hoe", type = ItemType.Hoe, displayName = "Cangkul (Hoe)" },
+                    new InventoryItem { id = "Seed", type = ItemType.Seed, displayName = "Bibit Anomali (Seed)" },
+                    new InventoryItem { id = "WateringCan", type = ItemType.WateringCan, displayName = "Penyiram (Watering Can)" },
+                    new InventoryItem { id = "Watch", type = ItemType.Watch, displayName = "Jam Saku (Pocket Watch)" },
+                    new InventoryItem { id = "Journal", type = ItemType.Journal, displayName = "Jurnal (Journal)" }
                 };
             }
         }

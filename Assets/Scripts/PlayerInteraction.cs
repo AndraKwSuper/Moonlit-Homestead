@@ -5,7 +5,8 @@ namespace MoonlitHomestead
     public class PlayerInteraction : MonoBehaviour
     {
         [Header("Detection Settings (Side-Scroller)")]
-        [SerializeField] private float interactRange = 1.0f;
+        [SerializeField] private float interactRange = 1.2f;
+        [SerializeField] private Vector2 groundOffset = new Vector2(0.5f, -0.4f);
         [SerializeField] private LayerMask interactableLayer = ~0;
 
         private PlayerController2D controller;
@@ -24,7 +25,7 @@ namespace MoonlitHomestead
                 TryInteract();
             }
 
-            // Gunakan item terpilih langsung (misal Pocket Watch atau Journal) dengan klik kanan / tombol F
+            // Gunakan item terpilih langsung (misal Pocket Watch atau Journal) dengan tombol F
             if (Input.GetKeyDown(KeyCode.F))
             {
                 UseActiveItemDirectly();
@@ -35,9 +36,9 @@ namespace MoonlitHomestead
         {
             if (InventoryHotbar.Instance == null || InventoryHotbar.Instance.CurrentItem == null) return;
 
-            string itemId = InventoryHotbar.Instance.CurrentItem.id;
+            ItemType itemType = InventoryHotbar.Instance.CurrentItem.Type;
 
-            if (itemId == "Watch")
+            if (itemType == ItemType.Watch)
             {
                 if (TimeLoopManager.Instance != null && LoopBreakerManager.Instance != null)
                 {
@@ -47,7 +48,7 @@ namespace MoonlitHomestead
                     );
                 }
             }
-            else if (itemId == "Journal")
+            else if (itemType == ItemType.Journal)
             {
                 if (GameHUD.Instance != null)
                 {
@@ -59,8 +60,8 @@ namespace MoonlitHomestead
         private void TryInteract()
         {
             Vector2 checkDirection = controller != null ? controller.FacingDirection : Vector2.right;
-            // Deteksi ke arah depan bawah (posisi tanah di lantai)
-            Vector2 origin = (Vector2)transform.position + checkDirection * 0.5f + Vector2.down * 0.3f;
+            // Deteksi ke arah depan bawah (posisi tanah di lantai dengan radius yang lebih terjangkau)
+            Vector2 origin = (Vector2)transform.position + new Vector2(checkDirection.x * groundOffset.x, groundOffset.y);
 
             int hitCount = Physics2D.OverlapCircleNonAlloc(origin, interactRange, hitBuffer, interactableLayer);
             bool interacted = false;
@@ -73,10 +74,10 @@ namespace MoonlitHomestead
                 FarmPlot plot = col.GetComponent<FarmPlot>();
                 if (plot != null)
                 {
-                    string selectedItem = "";
+                    ItemType selectedItem = ItemType.None;
                     if (InventoryHotbar.Instance != null && InventoryHotbar.Instance.CurrentItem != null)
                     {
-                        selectedItem = InventoryHotbar.Instance.CurrentItem.id;
+                        selectedItem = InventoryHotbar.Instance.CurrentItem.Type;
                     }
                     plot.Interact(selectedItem);
                     interacted = true;
@@ -94,7 +95,7 @@ namespace MoonlitHomestead
         private void OnDrawGizmosSelected()
         {
             Vector2 dir = controller != null ? controller.FacingDirection : Vector2.right;
-            Vector2 origin = (Vector2)transform.position + dir * 0.5f + Vector2.down * 0.3f;
+            Vector2 origin = (Vector2)transform.position + new Vector2(dir.x * groundOffset.x, groundOffset.y);
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(origin, interactRange);
         }

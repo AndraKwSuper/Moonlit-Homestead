@@ -36,15 +36,25 @@ namespace MoonlitHomestead
             UpdateVisuals();
         }
 
-        private void Start()
+        private void OnEnable()
         {
             if (TimeLoopManager.Instance != null)
             {
+                TimeLoopManager.Instance.OnLoopReset -= HandleLoopReset;
                 TimeLoopManager.Instance.OnLoopReset += HandleLoopReset;
             }
         }
 
-        private void OnDestroy()
+        private void Start()
+        {
+            if (TimeLoopManager.Instance != null)
+            {
+                TimeLoopManager.Instance.OnLoopReset -= HandleLoopReset;
+                TimeLoopManager.Instance.OnLoopReset += HandleLoopReset;
+            }
+        }
+
+        private void OnDisable()
         {
             if (TimeLoopManager.Instance != null)
             {
@@ -52,12 +62,12 @@ namespace MoonlitHomestead
             }
         }
 
-        public void Interact(string selectedItem)
+        public void Interact(ItemType selectedItem)
         {
             switch (currentState)
             {
                 case PlotState.Untilled:
-                    if (selectedItem == "Hoe")
+                    if (selectedItem == ItemType.Hoe)
                     {
                         currentState = PlotState.Tilled;
                         UpdateVisuals();
@@ -71,17 +81,21 @@ namespace MoonlitHomestead
                     break;
 
                 case PlotState.Tilled:
-                    if (selectedItem == "Seed")
+                    if (selectedItem == ItemType.Seed)
                     {
                         currentState = PlotState.Planted;
                         UpdateVisuals();
                         Debug.Log("[FarmPlot] Anomaly Seed berhasil ditanam!");
                         if (GameHUD.Instance != null) GameHUD.Instance.ShowMessage("Anomaly Seed ditanam. Biarkan menyerap malam hingga reset loop.");
                     }
+                    else
+                    {
+                        if (GameHUD.Instance != null) GameHUD.Instance.ShowMessage("Gunakan Bibit Anomali (Seed) untuk menanam.");
+                    }
                     break;
 
                 case PlotState.Planted:
-                    if (selectedItem == "WateringCan")
+                    if (selectedItem == ItemType.WateringCan)
                     {
                         if (GameHUD.Instance != null) GameHUD.Instance.ShowMessage("Tanaman disiram. Akarnya bergetar halus menyerap radiasi bulan.");
                     }
@@ -92,7 +106,7 @@ namespace MoonlitHomestead
                     break;
 
                 case PlotState.Mutated:
-                    if (selectedItem == "WateringCan")
+                    if (selectedItem == ItemType.WateringCan)
                     {
                         // Siram tanaman mutasi agar mencapai resonansi kosmik
                         currentState = PlotState.Resonated;
@@ -111,7 +125,7 @@ namespace MoonlitHomestead
                     break;
 
                 case PlotState.Resonated:
-                    if (selectedItem == "Hoe")
+                    if (selectedItem == ItemType.Hoe)
                     {
                         // Panen kristal
                         currentState = PlotState.Untilled;
@@ -126,6 +140,18 @@ namespace MoonlitHomestead
                         if (GameHUD.Instance != null) GameHUD.Instance.ShowMessage("Gunakan Cangkul (Hoe) untuk memanen kristal resonansi ini!");
                     }
                     break;
+            }
+        }
+
+        public void Interact(string selectedItem)
+        {
+            if (System.Enum.TryParse<ItemType>(selectedItem, true, out var parsed))
+            {
+                Interact(parsed);
+            }
+            else
+            {
+                Interact(ItemType.None);
             }
         }
 

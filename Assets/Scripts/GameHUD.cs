@@ -9,6 +9,8 @@ namespace MoonlitHomestead
         [Header("Clock & Loop UI")]
         [SerializeField] private Text clockText;
         [SerializeField] private Text loopText;
+        [SerializeField] private RectTransform hourHandTransform;
+        [SerializeField] private RectTransform minuteHandTransform;
 
         [Header("Stability Bar UI")]
         [SerializeField] private Slider stabilitySlider;
@@ -33,28 +35,114 @@ namespace MoonlitHomestead
                 return;
             }
             Instance = this;
+
+            EnsureReferences();
+        }
+
+        private void OnEnable()
+        {
+            EnsureReferences();
+            BindEvents();
         }
 
         private void Start()
         {
+            EnsureReferences();
+            BindEvents();
+
             if (TimeLoopManager.Instance != null)
             {
-                TimeLoopManager.Instance.OnTimeUpdated += HandleTimeUpdated;
-                TimeLoopManager.Instance.OnLoopReset += HandleLoopReset;
                 HandleTimeUpdated(TimeLoopManager.Instance.CurrentHour, TimeLoopManager.Instance.CurrentMinute);
-                HandleLoopReset(TimeLoopManager.Instance.CurrentLoopIndex);
+                UpdateLoopDisplay(TimeLoopManager.Instance.CurrentLoopIndex);
             }
 
             if (RealityStabilitySystem.Instance != null)
             {
-                RealityStabilitySystem.Instance.OnStabilityChanged += HandleStabilityChanged;
                 HandleStabilityChanged(RealityStabilitySystem.Instance.CurrentStability, RealityStabilitySystem.Instance.MaxStability);
             }
 
             if (InventoryHotbar.Instance != null)
             {
-                InventoryHotbar.Instance.OnItemSelected += HandleItemSelected;
                 HandleItemSelected(InventoryHotbar.Instance.SelectedIndex, InventoryHotbar.Instance.CurrentItem);
+            }
+        }
+
+        private void Update()
+        {
+            // Continuous update fallback to guarantee clock hands always rotate live
+            if (TimeLoopManager.Instance != null)
+            {
+                HandleTimeUpdated(TimeLoopManager.Instance.CurrentHour, TimeLoopManager.Instance.CurrentMinute);
+            }
+        }
+
+        private void EnsureReferences()
+        {
+            if (clockText == null)
+            {
+                var go = GameObject.Find("ClockText");
+                if (go != null) clockText = go.GetComponent<Text>();
+            }
+            if (loopText == null)
+            {
+                var go = GameObject.Find("LoopText");
+                if (go != null) loopText = go.GetComponent<Text>();
+            }
+            if (hourHandTransform == null)
+            {
+                var go = GameObject.Find("HourHand");
+                if (go != null) hourHandTransform = go.GetComponent<RectTransform>();
+            }
+            if (minuteHandTransform == null)
+            {
+                var go = GameObject.Find("MinuteHand");
+                if (go != null) minuteHandTransform = go.GetComponent<RectTransform>();
+            }
+            if (stabilitySlider == null)
+            {
+                var go = GameObject.Find("StabilitySlider");
+                if (go != null) stabilitySlider = go.GetComponent<Slider>();
+            }
+            if (stabilityFill == null && stabilitySlider != null && stabilitySlider.fillRect != null)
+            {
+                stabilityFill = stabilitySlider.fillRect.GetComponent<Image>();
+            }
+            if (dialoguePanel == null)
+            {
+                dialoguePanel = GameObject.Find("DialoguePanel");
+            }
+            if (dialogueText == null)
+            {
+                var go = GameObject.Find("DialogueText");
+                if (go != null) dialogueText = go.GetComponent<Text>();
+            }
+            if (itemText == null)
+            {
+                var go = GameObject.Find("HotbarText");
+                if (go != null) itemText = go.GetComponent<Text>();
+            }
+        }
+
+        private void BindEvents()
+        {
+            if (TimeLoopManager.Instance != null)
+            {
+                TimeLoopManager.Instance.OnTimeUpdated -= HandleTimeUpdated;
+                TimeLoopManager.Instance.OnTimeUpdated += HandleTimeUpdated;
+                TimeLoopManager.Instance.OnLoopReset -= HandleLoopReset;
+                TimeLoopManager.Instance.OnLoopReset += HandleLoopReset;
+            }
+
+            if (RealityStabilitySystem.Instance != null)
+            {
+                RealityStabilitySystem.Instance.OnStabilityChanged -= HandleStabilityChanged;
+                RealityStabilitySystem.Instance.OnStabilityChanged += HandleStabilityChanged;
+            }
+
+            if (InventoryHotbar.Instance != null)
+            {
+                InventoryHotbar.Instance.OnItemSelected -= HandleItemSelected;
+                InventoryHotbar.Instance.OnItemSelected += HandleItemSelected;
             }
         }
 
@@ -90,22 +178,41 @@ namespace MoonlitHomestead
             }
         }
 
-        private void HandleTimeUpdated(float hour, float minute)
+        public void HandleTimeUpdated(float hour, float minute)
         {
             if (clockText != null)
             {
                 string displayHour = (hour >= 24) ? "00" : hour.ToString("00");
                 clockText.text = $"{displayHour}:{minute:00}";
             }
+
+            // Rotasi jarum jam & menit analog
+            if (hourHandTransform != null)
+            {
+                // 1 putaran 12 jam = 360 derajat (30 derajat per jam)
+                float hourDeg = (hour % 12f + minute / 60f) * 30f;
+                hourHandTransform.localEulerAngles = new Vector3(0f, 0f, -hourDeg);
+            }
+
+            if (minuteHandTransform != null)
+            {
+                // 1 putaran 60 menit = 360 derajat (6 derajat per menit)
+                float minuteDeg = minute * 6f;
+                minuteHandTransform.localEulerAngles = new Vector3(0f, 0f, -minuteDeg);
+            }
+        }
+
+        public void UpdateLoopDisplay(int loopIndex)
+        {
+            if (loopText != null)
+            {
+                loopText.text = $"Loop {loopIndex:D2}";
+            }
         }
 
         private void HandleLoopReset(int loopIndex)
         {
-            if (loopText != null)
-            {
-                loopText.text = $"Loop {loopIndex:00}";
-            }
-
+            UpdateLoopDisplay(loopIndex);
             ShowMessage($"Reality rewinds... The soil remembers loop {loopIndex}.");
         }
 

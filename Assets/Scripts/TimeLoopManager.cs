@@ -23,6 +23,7 @@ namespace MoonlitHomestead
         public float CurrentHour { get; private set; }
         public float CurrentMinute { get; private set; }
         public int CurrentLoopIndex => currentLoop;
+        public bool IsLoopFrozen => isLoopFrozen;
 
         private float elapsedTime = 0f;
         private bool isRewinding = false;
@@ -42,13 +43,30 @@ namespace MoonlitHomestead
         {
             ResetDayTimer();
 
+            // Safe subscription check
+            BindLoopBreaker();
+        }
+
+        private void OnEnable()
+        {
+            BindLoopBreaker();
+        }
+
+        private void OnDisable()
+        {
+            UnbindLoopBreaker();
+        }
+
+        private void BindLoopBreaker()
+        {
             if (LoopBreakerManager.Instance != null)
             {
+                LoopBreakerManager.Instance.OnLoopBroken -= HandleLoopBroken;
                 LoopBreakerManager.Instance.OnLoopBroken += HandleLoopBroken;
             }
         }
 
-        private void OnDestroy()
+        private void UnbindLoopBreaker()
         {
             if (LoopBreakerManager.Instance != null)
             {
@@ -56,12 +74,17 @@ namespace MoonlitHomestead
             }
         }
 
-        private void HandleLoopBroken()
+        public void FreezeLoop()
         {
             isLoopFrozen = true;
             CurrentHour = 0f;
             CurrentMinute = 1f;
             OnTimeUpdated?.Invoke(CurrentHour, CurrentMinute);
+        }
+
+        private void HandleLoopBroken()
+        {
+            FreezeLoop();
         }
 
         private void Update()

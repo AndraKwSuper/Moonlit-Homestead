@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moonlit Homestead - Game Loop & System Architecture</title>
+<style>
+  :root {
+    --bg-color: #0b0d17;
+    --card-bg: #101424;
+    --text-primary: #e6eaf8;
+    --text-secondary: #94a3b8;
+    --border-color: #232d4b;
+    --accent-blue: #38bdf8;
+    --accent-purple: #a855f7;
+    --accent-green: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+    min-height: 100vh;
+  }
+  .header {
+    text-align: center;
+    max-width: 860px;
+    margin-bottom: 28px;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    background: #151b2e;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .tab-btn.active {
+    background: #2563eb;
+    color: #fff;
+    border-color: #3b82f6;
+  }
+  .diagram-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  svg { display: block; max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌙 MOONLIT HOMESTEAD — GAME LOOP &amp; SYSTEM ARCHITECTURE</h1>
+  <p>Hierarki Core Game Loop (Micro ➔ Meso ➔ Macro) dan State Machine Siklus Waktu 18:00 – 00:00.</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('gameloop')">🔄 1. Core Game Loop (Micro / Meso / Macro)</button>
+  <button class="tab-btn" onclick="switchTab('statemachine')">🌾 2. Time-Loop &amp; Farming State Machine</button>
+</div>
+
+<!-- TAB 1: CORE GAME LOOP -->
+<div id="tab-gameloop" class="tab-content active diagram-container">
+<svg width="1000" height="680" viewBox="0 0 1000 680" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="gl-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+    </marker>
+    <marker id="gl-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7" />
+    </marker>
+    <marker id="gl-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="gl-rose" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
+    </marker>
+    <marker id="gl-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+    </marker>
+  </defs>
+
+  <!-- MACRO TIER -->
+  <rect x="30" y="30" width="940" height="620" rx="12" fill="#0f1526" stroke="#25355a" stroke-width="2" />
+  <text x="50" y="62" font-size="14" font-weight="700" fill="#a855f7" letter-spacing="1">MACRO LOOP (SESSION / META PROGRESSION — LOOP TO LOOP)</text>
+
+  <!-- MESO TIER -->
+  <rect x="60" y="85" width="880" height="380" rx="10" fill="#141c33" stroke="#2d406e" stroke-width="1.5" />
+  <text x="80" y="115" font-size="13" font-weight="700" fill="#38bdf8" letter-spacing="1">MESO LOOP (IN-GAME DAY: 18:00 – 00:00 / ~60 DETIK NYATA)</text>
+
+  <!-- MICRO TIER -->
+  <rect x="90" y="135" width="820" height="150" rx="8" fill="#1a2544" stroke="#3d5694" stroke-width="1.5" />
+  <text x="110" y="162" font-size="12" font-weight="700" fill="#34d399" letter-spacing="1">MICRO LOOP (DETIK-KE-DETIK: INPUT &amp; FEEDBACK)</text>
+
+  <!-- Micro Loop Elements -->
+  <!-- 1. Player Input -->
+  <g transform="translate(110, 180)">
+    <rect width="160" height="75" rx="6" fill="#0d1424" stroke="#2d406e" />
+    <text x="14" y="24" font-size="12" font-weight="700" fill="#f8fafc">1. PLAYER INPUT</text>
+    <text x="14" y="44" font-size="11" fill="#94a3b8">• A/D (Gerak Smooth)</text>
+    <text x="14" y="60" font-size="11" fill="#94a3b8">• Space (Lompat) | 1-5 Tool</text>
+  </g>
+  <path d="M 270 217 L 315 217" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#gl-emerald)" />
+
+  <!-- 2. Action & Physics -->
+  <g transform="translate(325, 180)">
+    <rect width="180" height="75" rx="6" fill="#0d1424" stroke="#2d406e" />
+    <text x="14" y="24" font-size="12" font-weight="700" fill="#f8fafc">2. ACTION &amp; INTERACT</text>
+    <text x="14" y="44" font-size="11" fill="#94a3b8">• [E] Deteksi Tanah (NonAlloc)</text>
+    <text x="14" y="60" font-size="11" fill="#94a3b8">• [F] Pakai Watch / Journal</text>
+  </g>
+  <path d="M 505 217 L 550 217" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#gl-emerald)" />
+
+  <!-- 3. Immediate Feedback -->
+  <g transform="translate(560, 180)">
+    <rect width="180" height="75" rx="6" fill="#0d1424" stroke="#2d406e" />
+    <text x="14" y="24" font-size="12" font-weight="700" fill="#f8fafc">3. IMMEDIATE FEEDBACK</text>
+    <text x="14" y="44" font-size="11" fill="#94a3b8">• Ganti Warna Tanah</text>
+    <text x="14" y="60" font-size="11" fill="#94a3b8">• Dialog Banner HUD</text>
+  </g>
+
+  <!-- Loop back arrow Micro -->
+  <path d="M 740 217 C 820 217, 820 160, 200 160" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#gl-emerald)" />
+
+
+  <!-- Meso Loop Elements (Time & Sanity Tension) -->
+  <g transform="translate(110, 310)">
+    <rect width="210" height="120" rx="6" fill="#0d1424" stroke="#2d406e" />
+    <text x="16" y="28" font-size="13" font-weight="700" fill="#38bdf8">TICKING CLOCK (18-00)</text>
+    <text x="16" y="50" font-size="11" fill="#94a3b8">• Waktu maju 60s nyata</text>
+    <text x="16" y="68" font-size="11" fill="#94a3b8">• Cahaya makin malam</text>
+    <text x="16" y="88" font-size="11" fill="#38bdf8">• Target: Siapkan tanah</text>
+    <text x="16" y="104" font-size="11" fill="#94a3b8">  sebelum tengah malam!</text>
+  </g>
+
+  <g transform="translate(370, 310)">
+    <rect width="210" height="120" rx="6" fill="#0d1424" stroke="#be123c" />
+    <text x="16" y="28" font-size="13" font-weight="700" fill="#fb7185">SANITY EROSION</text>
+    <text x="16" y="50" font-size="11" fill="#fecdd3">• Pasif: -0.5 poin / detik</text>
+    <text x="16" y="68" font-size="11" fill="#fecdd3">• Anomali: -10 poin</text>
+    <text x="16" y="92" font-size="11" fill="#fb7185">Sanity == 0 ➔ Collapse!</text>
+  </g>
+
+  <g transform="translate(630, 310)">
+    <rect width="240" height="120" rx="6" fill="#2d1520" stroke="#f43f5e" />
+    <text x="16" y="28" font-size="13" font-weight="700" fill="#f43f5e">DAY END: REALITY COLLAPSE</text>
+    <text x="16" y="50" font-size="11" fill="#fecdd3">• Jarum menyentuh 00:00</text>
+    <text x="16" y="68" font-size="11" fill="#fecdd3">• Layar rewinding</text>
+    <text x="16" y="88" font-size="11" fill="#a855f7">• Trigger: OnLoopReset(N+1)</text>
+    <text x="16" y="104" font-size="11" fill="#c084fc">• Masuk ke Macro Loop</text>
+  </g>
+
+  <path d="M 320 370 L 370 370" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#gl-cyan)" />
+  <path d="M 580 370 L 630 370" fill="none" stroke="#f43f5e" stroke-width="2" marker-end="url(#gl-rose)" />
+
+
+  <!-- MACRO PROGRESSION (Bottom) -->
+  <!-- 1. World Remembers -->
+  <g transform="translate(90, 500)">
+    <rect width="240" height="110" rx="6" fill="#1b122c" stroke="#7e22ce" />
+    <text x="16" y="26" font-size="12" font-weight="700" fill="#c084fc">THE WORLD REMEMBERS</text>
+    <text x="16" y="46" font-size="11" fill="#e9d5ff">• Planted Plot ➔ Mutated Flora</text>
+    <text x="16" y="64" font-size="11" fill="#e9d5ff">• Player ingat petunjuk</text>
+    <text x="16" y="84" font-size="11" fill="#a855f7">• Loop Counter + 1</text>
+  </g>
+
+  <path d="M 330 555 L 390 555" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#gl-purple)" />
+
+  <!-- 2. Cosmic Harvest -->
+  <g transform="translate(390, 500)">
+    <rect width="240" height="110" rx="6" fill="#132626" stroke="#059669" />
+    <text x="16" y="26" font-size="12" font-weight="700" fill="#34d399">PUZZLE PROGRESSION</text>
+    <text x="16" y="46" font-size="11" fill="#a7f3d0">• Siram tanaman mutasi</text>
+    <text x="16" y="64" font-size="11" fill="#a7f3d0">• Panen Lunar Crystal 💎</text>
+    <text x="16" y="84" font-size="11" fill="#6ee7b7">• Standby hingga jam 23:55</text>
+  </g>
+
+  <path d="M 630 555 L 690 555" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#gl-amber)" />
+
+  <!-- 3. Ultimate Victory -->
+  <g transform="translate(690, 500)">
+    <rect width="240" height="110" rx="6" fill="#241e12" stroke="#d97706" />
+    <text x="16" y="26" font-size="12" font-weight="700" fill="#fbbf24">BREAK THE LOOP! 🌅</text>
+    <text x="16" y="46" font-size="11" fill="#fef3c7">• Gunakan Watch [F] di 23:55</text>
+    <text x="16" y="64" font-size="11" fill="#fef3c7">• Jam berdetik ke 00:01</text>
+    <text x="16" y="84" font-size="11" fill="#f59e0b">FAJAR PERTAMA (GAME SELESAI)</text>
+  </g>
+
+  <!-- Rewind Feedback Arc from Day End back to Loop Remembers -->
+  <path d="M 750 430 C 750 470, 210 470, 210 500" fill="none" stroke="#a855f7" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#gl-purple)" />
+
+</svg>
+</div>
+
+<!-- TAB 2: TIME-LOOP & FARMING STATE MACHINE -->
+<div id="tab-statemachine" class="tab-content diagram-container">
+<svg width="1040" height="760" viewBox="0 0 1040 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7" />
+    </marker>
+    <marker id="arrow-rose" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
+    </marker>
+    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+    </marker>
+  </defs>
+
+  <rect x="40" y="40" width="460" height="420" rx="10" fill="#141a2e" stroke="#232d4b" stroke-width="1.5" stroke-dasharray="4 4" />
+  <text x="60" y="70" font-size="13" font-weight="700" fill="#60a5fa" letter-spacing="1">SIKLUS HARI N (LOOP N: 18:00 — 00:00)</text>
+
+  <rect x="540" y="40" width="460" height="420" rx="10" fill="#1e1833" stroke="#3b2b5c" stroke-width="1.5" stroke-dasharray="4 4" />
+  <text x="560" y="70" font-size="13" font-weight="700" fill="#c084fc" letter-spacing="1">SIKLUS HARI N+1 (THE WORLD REMEMBERS)</text>
+
+  <rect x="40" y="480" width="960" height="240" rx="10" fill="#121824" stroke="#253248" stroke-width="1.5" />
+  <text x="60" y="510" font-size="13" font-weight="700" fill="#f59e0b" letter-spacing="1">SISTEM KONDISI &amp; LOOP BREAKER (ESCAPE SEQUENCE)</text>
+
+  <path d="M 230 145 L 290 145" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-cyan)" />
+  <path d="M 370 185 L 370 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-cyan)" />
+  <path d="M 450 280 C 490 280, 510 145, 590 145" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="6 3" marker-end="url(#arrow-purple)" />
+  <path d="M 750 145 L 810 145" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-cyan)" />
+  <path d="M 890 185 L 890 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-cyan)" />
+  <path d="M 890 320 C 890 410, 800 580, 680 580" fill="none" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-emerald)" />
+  <path d="M 220 615 L 300 615" fill="none" stroke="#f43f5e" stroke-width="2" marker-end="url(#arrow-rose)" />
+  <path d="M 680 645 L 800 645" fill="none" stroke="#f59e0b" stroke-width="2.5" marker-end="url(#arrow-amber)" />
+
+  <g transform="translate(70, 105)">
+    <rect width="160" height="80" rx="8" fill="#1e2438" stroke="#3b4866" stroke-width="1.5" />
+    <text x="20" y="32" font-size="14" font-weight="700" fill="#f8fafc">1. Untilled Plot</text>
+    <text x="20" y="52" font-size="11" fill="#94a3b8">Tanah biasa kering</text>
+    <text x="20" y="68" font-size="11" fill="#64748b">Warna: Coklat kusam</text>
+  </g>
+  <text x="238" y="135" font-size="11" font-weight="600" fill="#38bdf8">[E] Hoe</text>
+
+  <g transform="translate(290, 105)">
+    <rect width="160" height="80" rx="8" fill="#1e2438" stroke="#3b4866" stroke-width="1.5" />
+    <text x="20" y="32" font-size="14" font-weight="700" fill="#f8fafc">2. Tilled Plot</text>
+    <text x="20" y="52" font-size="11" fill="#94a3b8">Tanah gembur basah</text>
+    <text x="20" y="68" font-size="11" fill="#64748b">Siap ditanami bibit</text>
+  </g>
+  <text x="378" y="215" font-size="11" font-weight="600" fill="#38bdf8">[E] Seed</text>
+
+  <g transform="translate(290, 240)">
+    <rect width="160" height="80" rx="8" fill="#172b26" stroke="#22644e" stroke-width="1.5" />
+    <text x="20" y="32" font-size="14" font-weight="700" fill="#34d399">3. Planted Seed</text>
+    <text x="20" y="52" font-size="11" fill="#a7f3d0">Menyerap sinar bulan</text>
+    <text x="20" y="68" font-size="11" fill="#6ee7b7">Bisa disiram (WateringCan)</text>
+  </g>
+
+  <g transform="translate(110, 360)">
+    <rect width="320" height="60" rx="6" fill="#2d1b2f" stroke="#7e22ce" stroke-width="1" />
+    <text x="16" y="26" font-size="12" font-weight="700" fill="#f472b6">JAM 00:00: REALITY COLLAPSE</text>
+    <text x="16" y="44" font-size="11" fill="#fbcfe8">Waktu berputar balik ke 18:00. Tanaman bermutasi!</text>
+  </g>
+
+  <g transform="translate(590, 105)">
+    <rect width="160" height="80" rx="8" fill="#281a38" stroke="#7e22ce" stroke-width="1.5" />
+    <text x="20" y="32" font-size="14" font-weight="700" fill="#c084fc">4. Mutated Flora</text>
+    <text x="20" y="52" font-size="11" fill="#e9d5ff">Residu anomali loop lalu</text>
+    <text x="20" y="68" font-size="11" fill="#f43f5e">Didekati polos: -10 Sanity</text>
+  </g>
+  <text x="753" y="135" font-size="11" font-weight="600" fill="#38bdf8">[E] WateringCan</text>
+
+  <g transform="translate(810, 105)">
+    <rect width="160" height="80" rx="8" fill="#132f38" stroke="#0ea5e9" stroke-width="1.5" />
+    <text x="20" y="32" font-size="14" font-weight="700" fill="#38bdf8">5. Resonated Crop</text>
+    <text x="20" y="52" font-size="11" fill="#bae6fd">Bunga kosmik mekar</text>
+    <text x="20" y="68" font-size="11" fill="#7dd3fc">Kristal siap dipetik</text>
+  </g>
+  <text x="898" y="215" font-size="11" font-weight="600" fill="#38bdf8">[E] Hoe (Harvest)</text>
+
+  <g transform="translate(810, 240)">
+    <rect width="160" height="80" rx="8" fill="#1c382b" stroke="#10b981" stroke-width="1.5" />
+    <text x="20" y="32" font-size="14" font-weight="700" fill="#6ee7b7">Lunar Crystal 💎</text>
+    <text x="20" y="52" font-size="11" fill="#a7f3d0">hasCrystal = true</text>
+    <text x="20" y="68" font-size="11" fill="#d1fae5">Kunci pemecah anomali</text>
+  </g>
+
+  <g transform="translate(60, 560)">
+    <rect width="160" height="110" rx="8" fill="#1c1f2e" stroke="#334155" stroke-width="1.5" />
+    <text x="16" y="28" font-size="13" font-weight="700" fill="#f8fafc">TIME &amp; SANITY</text>
+    <text x="16" y="48" font-size="11" fill="#94a3b8">• Day: 60s nyata</text>
+    <text x="16" y="66" font-size="11" fill="#94a3b8">• 18:00 -> 24:00</text>
+    <text x="16" y="84" font-size="11" fill="#f43f5e">• Sanity: -0.5/s decay</text>
+    <text x="16" y="100" font-size="11" fill="#f87171">• Mutasi: -10 Sanity</text>
+  </g>
+
+  <g transform="translate(300, 575)">
+    <rect width="180" height="80" rx="8" fill="#2d1520" stroke="#be123c" stroke-width="1.5" />
+    <text x="16" y="28" font-size="12" font-weight="700" fill="#fb7185">FORCE REWIND</text>
+    <text x="16" y="48" font-size="11" fill="#fecdd3">Sanity == 0 ATAU</text>
+    <text x="16" y="64" font-size="11" fill="#fecdd3">Waktu mencapai 00:00</text>
+  </g>
+
+  <g transform="translate(540, 560)">
+    <rect width="180" height="110" rx="8" fill="#292013" stroke="#b45309" stroke-width="1.5" />
+    <text x="16" y="28" font-size="13" font-weight="700" fill="#fbbf24">POCKET WATCH [F]</text>
+    <text x="16" y="48" font-size="11" fill="#fde68a">Syarat Break Loop:</text>
+    <text x="16" y="66" font-size="11" fill="#fef3c7">1. Punya Lunar Crystal</text>
+    <text x="16" y="84" font-size="11" fill="#fef3c7">2. Waktu: 23:55 – 24:00</text>
+    <text x="16" y="100" font-size="11" fill="#ca8a04">(Ambang Tengah Malam)</text>
+  </g>
+
+  <g transform="translate(800, 580)">
+    <rect width="180" height="80" rx="8" fill="#143324" stroke="#059669" stroke-width="2" />
+    <text x="20" y="32" font-size="14" font-weight="700" fill="#34d399">LOOP BROKEN! 🎉</text>
+    <text x="20" y="52" font-size="11" fill="#a7f3d0">Jam berdetik ke 00:01</text>
+    <text x="20" y="68" font-size="11" fill="#d1fae5">Fajar Pertama Tiba!</text>
+  </g>
+</svg>
+</div>
+
+<script>
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  
+  document.getElementById('tab-' + tabId).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>

@@ -140,11 +140,12 @@ namespace MoonlitHomestead.Editor
             GameObject playerGO = GameObject.Find("Player");
             if (playerGO == null) playerGO = new GameObject("Player");
             playerGO.transform.position = new Vector3(-4.5f, 0.2f, 0f);
-            playerGO.transform.localScale = new Vector3(0.85f, 1.35f, 1f);
+            playerGO.transform.localScale = Vector3.one;
 
             var playerSR = GetOrAdd<SpriteRenderer>(playerGO);
-            playerSR.sprite = boxSprite;
-            playerSR.color = new Color(0.3f, 0.85f, 0.8f); // Teal
+            Sprite elianIdle = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Characters/Elian_Idle.png");
+            playerSR.sprite = elianIdle != null ? elianIdle : boxSprite;
+            playerSR.color = Color.white;
 
             var rb = GetOrAdd<Rigidbody2D>(playerGO);
             rb.gravityScale = 3f;
@@ -152,18 +153,27 @@ namespace MoonlitHomestead.Editor
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             var col = GetOrAdd<BoxCollider2D>(playerGO);
-            col.size = new Vector2(0.85f, 1.0f);
-            col.offset = Vector2.zero;
+            col.size = new Vector2(0.85f, 1.6f);
+            col.offset = new Vector2(0f, 0.8f);
 
             var controller = GetOrAdd<PlayerController2D>(playerGO);
             var interaction = GetOrAdd<PlayerInteraction>(playerGO);
+            var animator = GetOrAdd<Animator>(playerGO);
+            RuntimeAnimatorController playerAnimCtrl = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/ANim/Player.controller");
+            if (playerAnimCtrl != null)
+            {
+                animator.runtimeAnimatorController = playerAnimCtrl;
+            }
 
             // 8. Setup Canvas UI
             GameObject canvasGO = GameObject.Find("HUD_Canvas");
             if (canvasGO == null) canvasGO = new GameObject("HUD_Canvas");
 
             Canvas canvas = GetOrAdd<Canvas>(canvasGO);
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 5f;
+            canvas.sortingOrder = 10;
 
             CanvasScaler scaler = GetOrAdd<CanvasScaler>(canvasGO);
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -190,37 +200,115 @@ namespace MoonlitHomestead.Editor
             topRect.anchoredPosition = new Vector2(0f, -20f);
             topRect.sizeDelta = new Vector2(0f, 70f);
 
-            // Clock Text
-            GameObject clockGO = GetOrCreateChild(topPanelGO, "ClockText");
+            // Bersihkan ClockWidgetContainer versi lama jika tersimpan di dalam TopHeaderPanel
+            Transform legacyClock = topPanelGO.transform.Find("ClockWidgetContainer");
+            if (legacyClock != null)
+            {
+                Object.DestroyImmediate(legacyClock.gameObject);
+            }
+
+            // UI Elements: Clock & Loop (Antique Occult Clock & Loop Banner)
+            Sprite clockDialSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/ClockParts/clock_body_empty.png")
+                ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/ui_clock_dial_base.png");
+            Sprite hourHandSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/ClockParts/hand_ornate_medium.png")
+                ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/ui_clock_hand_hour.png");
+            Sprite minuteHandSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/ClockParts/hand_ornate_long.png")
+                ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/ui_clock_hand_minute.png");
+            Sprite loopBannerSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/ClockParts/loop_banner_blank.png")
+                ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/ui_loop_banner_blank.png");
+
+            // Harmonious Top-Right Anchor for Antique Pocket Watch & Loop Ribbon
+            GameObject clockContainerGO = GetOrCreateChild(canvasGO, "ClockWidgetContainer");
+            RectTransform clockContainerRect = GetOrAdd<RectTransform>(clockContainerGO);
+            clockContainerRect.anchorMin = new Vector2(1f, 1f);
+            clockContainerRect.anchorMax = new Vector2(1f, 1f);
+            clockContainerRect.pivot = new Vector2(1f, 1f);
+            clockContainerRect.anchoredPosition = new Vector2(-40f, -25f);
+            clockContainerRect.sizeDelta = new Vector2(440f, 150f);
+
+            // 1. Clock Dial Base Image (Size: 130w x 162h, proportional to 430x538)
+            GameObject clockDialGO = GetOrCreateChild(clockContainerGO, "ClockDial");
+            RectTransform clockDialRect = GetOrAdd<RectTransform>(clockDialGO);
+            clockDialRect.anchorMin = new Vector2(0f, 1f);
+            clockDialRect.anchorMax = new Vector2(0f, 1f);
+            clockDialRect.pivot = new Vector2(0f, 1f);
+            clockDialRect.anchoredPosition = new Vector2(0f, 0f);
+            clockDialRect.sizeDelta = new Vector2(130f, 162f);
+            Image clockDialImg = GetOrAdd<Image>(clockDialGO);
+            if (clockDialSprite != null) clockDialImg.sprite = clockDialSprite;
+            clockDialImg.type = Image.Type.Simple;
+            clockDialImg.preserveAspect = true;
+
+            // Pin center in dial base (Normalized: X=0.4945, Y=0.5108)
+            // 2. Hour Hand
+            GameObject hourHandGO = GetOrCreateChild(clockDialGO, "HourHand");
+            RectTransform hourHandRect = GetOrAdd<RectTransform>(hourHandGO);
+            hourHandRect.anchorMin = new Vector2(0.4945f, 0.5108f);
+            hourHandRect.anchorMax = new Vector2(0.4945f, 0.5108f);
+            hourHandRect.pivot = new Vector2(0.5367f, 0.5f);
+            hourHandRect.anchoredPosition = Vector2.zero;
+            hourHandRect.sizeDelta = new Vector2(60f, 60f);
+            Image hourHandImg = GetOrAdd<Image>(hourHandGO);
+            if (hourHandSprite != null) hourHandImg.sprite = hourHandSprite;
+            hourHandImg.type = Image.Type.Simple;
+            hourHandImg.preserveAspect = true;
+
+            // 3. Minute Hand
+            GameObject minuteHandGO = GetOrCreateChild(clockDialGO, "MinuteHand");
+            RectTransform minuteHandRect = GetOrAdd<RectTransform>(minuteHandGO);
+            minuteHandRect.anchorMin = new Vector2(0.4945f, 0.5108f);
+            minuteHandRect.anchorMax = new Vector2(0.4945f, 0.5108f);
+            minuteHandRect.pivot = new Vector2(0.5133f, 0.625f);
+            minuteHandRect.anchoredPosition = Vector2.zero;
+            minuteHandRect.sizeDelta = new Vector2(85f, 85f);
+            Image minuteHandImg = GetOrAdd<Image>(minuteHandGO);
+            if (minuteHandSprite != null) minuteHandImg.sprite = minuteHandSprite;
+            minuteHandImg.type = Image.Type.Simple;
+            minuteHandImg.preserveAspect = true;
+
+            // 4. Digital Time Text (Subtle glow underneath the watch glass)
+            GameObject clockGO = GetOrCreateChild(clockDialGO, "ClockText");
             Text clockTxt = GetOrAdd<Text>(clockGO);
             clockTxt.font = defaultFont;
-            clockTxt.fontSize = 34;
+            clockTxt.fontSize = 18;
             clockTxt.fontStyle = FontStyle.Bold;
             clockTxt.alignment = TextAnchor.MiddleCenter;
-            clockTxt.color = Color.white;
+            clockTxt.color = new Color(0.85f, 0.95f, 1f, 0.95f);
             clockTxt.text = "18:00";
             RectTransform clockRect = GetOrAdd<RectTransform>(clockGO);
-            clockRect.anchorMin = new Vector2(0.5f, 0.5f);
-            clockRect.anchorMax = new Vector2(0.5f, 0.5f);
+            clockRect.anchorMin = new Vector2(0.4945f, 0.18f);
+            clockRect.anchorMax = new Vector2(0.4945f, 0.18f);
             clockRect.pivot = new Vector2(0.5f, 0.5f);
-            clockRect.anchoredPosition = new Vector2(-70f, 0f);
-            clockRect.sizeDelta = new Vector2(160f, 50f);
+            clockRect.anchoredPosition = Vector2.zero;
+            clockRect.sizeDelta = new Vector2(80f, 25f);
 
-            // Loop Text
-            GameObject loopGO = GetOrCreateChild(topPanelGO, "LoopText");
+            // 5. Loop Ribbon Banner (Aligned adjacent to the watch casing)
+            GameObject bannerGO = GetOrCreateChild(clockContainerGO, "LoopBanner");
+            RectTransform bannerRect = GetOrAdd<RectTransform>(bannerGO);
+            bannerRect.anchorMin = new Vector2(0f, 1f);
+            bannerRect.anchorMax = new Vector2(0f, 1f);
+            bannerRect.pivot = new Vector2(0f, 1f);
+            bannerRect.anchoredPosition = new Vector2(125f, -42f);
+            bannerRect.sizeDelta = new Vector2(280f, 80f);
+            Image bannerImg = GetOrAdd<Image>(bannerGO);
+            if (loopBannerSprite != null) bannerImg.sprite = loopBannerSprite;
+            bannerImg.preserveAspect = true;
+
+            // 6. Loop Text (Inside Ribbon Plate)
+            GameObject loopGO = GetOrCreateChild(bannerGO, "LoopText");
             Text loopTxt = GetOrAdd<Text>(loopGO);
             loopTxt.font = defaultFont;
-            loopTxt.fontSize = 24;
+            loopTxt.fontSize = 22;
             loopTxt.fontStyle = FontStyle.Bold;
             loopTxt.alignment = TextAnchor.MiddleCenter;
-            loopTxt.color = new Color(0.9f, 0.75f, 0.3f); // Gold
+            loopTxt.color = new Color(0.95f, 0.84f, 0.45f); // Antique Warm Gold
             loopTxt.text = "Loop 00";
             RectTransform loopRect = GetOrAdd<RectTransform>(loopGO);
-            loopRect.anchorMin = new Vector2(0.5f, 0.5f);
-            loopRect.anchorMax = new Vector2(0.5f, 0.5f);
+            loopRect.anchorMin = new Vector2(0.12f, 0.15f);
+            loopRect.anchorMax = new Vector2(0.82f, 0.85f);
             loopRect.pivot = new Vector2(0.5f, 0.5f);
-            loopRect.anchoredPosition = new Vector2(80f, 0f);
-            loopRect.sizeDelta = new Vector2(160f, 50f);
+            loopRect.offsetMin = Vector2.zero;
+            loopRect.offsetMax = Vector2.zero;
 
             // Stability Bar (Slider)
             GameObject sliderGO = GetOrCreateChild(topPanelGO, "StabilitySlider");
@@ -306,6 +394,8 @@ namespace MoonlitHomestead.Editor
             SerializedObject hudSerialized = new SerializedObject(gameHUD);
             hudSerialized.FindProperty("clockText").objectReferenceValue = clockTxt;
             hudSerialized.FindProperty("loopText").objectReferenceValue = loopTxt;
+            hudSerialized.FindProperty("hourHandTransform").objectReferenceValue = hourHandRect;
+            hudSerialized.FindProperty("minuteHandTransform").objectReferenceValue = minuteHandRect;
             hudSerialized.FindProperty("stabilitySlider").objectReferenceValue = slider;
             hudSerialized.FindProperty("stabilityFill").objectReferenceValue = fillImg;
             hudSerialized.FindProperty("dialoguePanel").objectReferenceValue = diagPanelGO;
@@ -316,6 +406,8 @@ namespace MoonlitHomestead.Editor
             // Wire references on Player
             SerializedObject playerSerialized = new SerializedObject(controller);
             playerSerialized.FindProperty("spriteRenderer").objectReferenceValue = playerSR;
+            playerSerialized.FindProperty("animator").objectReferenceValue = animator;
+            playerSerialized.FindProperty("spriteIdle").objectReferenceValue = elianIdle;
             playerSerialized.ApplyModifiedProperties();
 
             SerializedObject interactionSerialized = new SerializedObject(interaction);

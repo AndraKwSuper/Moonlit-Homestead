@@ -6,16 +6,17 @@ namespace MoonlitHomestead
     public class PlayerController2D : MonoBehaviour
     {
         [Header("Movement (Side-Scroller)")]
-        [SerializeField] private float moveSpeed = 5f;
-        [SerializeField] private float jumpForce = 9f;
+        [SerializeField] private float moveSpeed = 5.5f;
+        [SerializeField] private float jumpForce = 9.5f;
+        [SerializeField] private float acceleration = 45f;
+        [SerializeField] private float deceleration = 55f;
         [SerializeField] private LayerMask groundLayer = ~0;
         [SerializeField] private float groundCheckRadius = 0.25f;
 
-        [Header("Sprites")]
+        [Header("Visuals & Animation")]
         [SerializeField] private SpriteRenderer spriteRenderer;
-        [SerializeField] private Sprite spriteFront;
-        [SerializeField] private Sprite spriteSide;
-        [SerializeField] private Sprite spriteBack;
+        [SerializeField] private Animator animator;
+        [SerializeField] private Sprite spriteIdle;
 
         private Rigidbody2D rb;
         private float horizontalInput;
@@ -23,6 +24,9 @@ namespace MoonlitHomestead
         private bool isGrounded;
 
         private readonly Collider2D[] groundBuffer = new Collider2D[4];
+
+        private static readonly int SpeedParam = Animator.StringToHash("Speed");
+        private static readonly int IsGroundedParam = Animator.StringToHash("IsGrounded");
 
         public Vector2 FacingDirection { get; private set; } = Vector2.right;
         public bool IsGrounded => isGrounded;
@@ -38,6 +42,16 @@ namespace MoonlitHomestead
             {
                 spriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
+
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>();
+            }
+
+            if (spriteRenderer != null && spriteIdle != null && animator == null)
+            {
+                spriteRenderer.sprite = spriteIdle;
+            }
         }
 
         private void Update()
@@ -49,17 +63,21 @@ namespace MoonlitHomestead
                 jumpRequested = true;
             }
 
-            UpdateFacingAndSprite();
+            UpdateFacingAndAnimation();
         }
 
         private void FixedUpdate()
         {
             CheckGrounded();
 
-            // Horizontal velocity
-            rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
+            // Smooth Horizontal Velocity using Acceleration & Deceleration
+            float targetVelocityX = horizontalInput * moveSpeed;
+            float accelRate = Mathf.Abs(targetVelocityX) > 0.01f ? acceleration : deceleration;
+            float newVelocityX = Mathf.MoveTowards(rb.velocity.x, targetVelocityX, accelRate * Time.fixedDeltaTime);
 
-            // Jump
+            rb.velocity = new Vector2(newVelocityX, rb.velocity.y);
+
+            // Jump handling
             if (jumpRequested)
             {
                 if (isGrounded)
@@ -87,17 +105,29 @@ namespace MoonlitHomestead
             }
         }
 
-        private void UpdateFacingAndSprite()
+        private void UpdateFacingAndAnimation()
         {
-            if (Mathf.Abs(horizontalInput) > 0.01f)
+            float absSpeed = Mathf.Abs(horizontalInput);
+
+            // Flip arah hadap
+            if (absSpeed > 0.05f)
             {
                 FacingDirection = new Vector2(Mathf.Sign(horizontalInput), 0f);
-
                 if (spriteRenderer != null)
                 {
-                    if (spriteSide != null) spriteRenderer.sprite = spriteSide;
                     spriteRenderer.flipX = horizontalInput < 0f;
                 }
+            }
+
+            // Integrasi Unity Animator
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                animator.SetFloat(SpeedParam, absSpeed);
+                animator.SetBool(IsGroundedParam, isGrounded);
+            }
+            else if (spriteRenderer != null && spriteIdle != null && absSpeed <= 0.05f)
+            {
+                spriteRenderer.sprite = spriteIdle;
             }
         }
 
