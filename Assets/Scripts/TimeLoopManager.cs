@@ -16,6 +16,12 @@ namespace MoonlitHomestead
         [Header("Loop Tracking")]
         [SerializeField] private int currentLoop = 0;
 
+        [Header("Debug Settings")]
+        [Tooltip("Aktifkan tombol shortcut keyboard untuk skip ke loop berikutnya")]
+        [SerializeField] private bool enableDebugSkip = true;
+        [Tooltip("Tombol shortcut keyboard untuk skip langsung ke loop berikutnya")]
+        [SerializeField] private KeyCode debugSkipLoopKey = KeyCode.L;
+
         public event Action<int> OnLoopReset;
         public event Action<float, float> OnTimeUpdated; // CurrentHour, Minute
 
@@ -89,6 +95,12 @@ namespace MoonlitHomestead
 
         private void Update()
         {
+            if (enableDebugSkip && Input.GetKeyDown(debugSkipLoopKey))
+            {
+                SkipToNextLoop();
+                return;
+            }
+
             if (isRewinding || isLoopFrozen) return;
 
             elapsedTime += Time.deltaTime;
@@ -105,6 +117,15 @@ namespace MoonlitHomestead
             {
                 TriggerTimeLoop();
             }
+        }
+
+        [ContextMenu("Debug: Skip to Next Loop")]
+        public void SkipToNextLoop()
+        {
+            if (isRewinding) return;
+            isLoopFrozen = false;
+            Debug.Log($"[TimeLoopManager] Debug Skip dipicu! Memaksa lompat ke Loop #{currentLoop + 1}...");
+            TriggerTimeLoop();
         }
 
         public void TriggerTimeLoop()
@@ -128,6 +149,7 @@ namespace MoonlitHomestead
             CurrentTimeRatio = 0f;
             CurrentHour = startHour;
             CurrentMinute = 0f;
+            OnTimeUpdated?.Invoke(CurrentHour, CurrentMinute);
         }
     }
 }

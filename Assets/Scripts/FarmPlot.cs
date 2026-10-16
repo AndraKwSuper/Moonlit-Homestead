@@ -132,7 +132,7 @@ namespace MoonlitHomestead
                     break;
 
                 case PlotState.Resonated:
-                    if (selectedItem == ItemType.Hoe)
+                    if (selectedItem == ItemType.Hoe || selectedItem == ItemType.None)
                     {
                         // Panen kristal
                         currentState = PlotState.Untilled;
@@ -144,7 +144,7 @@ namespace MoonlitHomestead
                     }
                     else
                     {
-                        if (GameHUD.Instance != null) GameHUD.Instance.ShowMessage("Gunakan Cangkul (Hoe) untuk memanen kristal resonansi ini!");
+                        if (GameHUD.Instance != null) GameHUD.Instance.ShowMessage("Gunakan Cangkul (Hoe) atau tangan kosong untuk memanen kristal resonansi ini!");
                     }
                     break;
             }

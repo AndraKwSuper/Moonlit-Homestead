@@ -8,11 +8,11 @@ namespace MoonlitHomestead
     public class HotbarUI : MonoBehaviour
     {
         [Header("Slot Configuration")]
+        [SerializeField] private List<HotbarSlotUI> slots = new List<HotbarSlotUI>();
         [SerializeField] private HotbarSlotUI slotPrefab;
         [SerializeField] private Transform slotContainer;
 
-        private readonly List<HotbarSlotUI> spawnedSlots = new List<HotbarSlotUI>();
-        private bool isInitialized = false;
+        public List<HotbarSlotUI> Slots => slots;
 
         private void Awake()
         {
@@ -24,17 +24,15 @@ namespace MoonlitHomestead
 
         private void Start()
         {
-            InitializeHotbar();
+            InitializeSlots();
             BindEvents();
+            SyncSelectionWithInventory();
         }
 
         private void OnEnable()
         {
-            if (isInitialized)
-            {
-                BindEvents();
-                SyncSelectionWithInventory();
-            }
+            BindEvents();
+            SyncSelectionWithInventory();
         }
 
         private void OnDisable()
@@ -48,47 +46,40 @@ namespace MoonlitHomestead
         }
 
         /// <summary>
-        /// Inisialisasi slot secara dinamis berdasarkan data InventoryHotbar.
+        /// Inisialisasi slot-slot UI (mengambil child yang sudah ada atau instansiasi prefab).
         /// </summary>
-        public void InitializeHotbar()
+        public void InitializeSlots()
         {
-            if (slotPrefab == null)
+            // Ambil child yang sudah ada di hierarki jika list kosong
+            if (slots == null || slots.Count == 0)
             {
-                Debug.LogWarning("[HotbarUI] Slot Prefab belum di-assign di Inspector!");
-                return;
+                slots = new List<HotbarSlotUI>(slotContainer.GetComponentsInChildren<HotbarSlotUI>(true));
             }
-
-            // Bersihkan slot lama jika ada
-            ClearExistingSlots();
 
             var inventory = InventoryHotbar.Instance;
             InventoryItem[] items = inventory != null ? inventory.Items : null;
-            int slotCount = (items != null && items.Length > 0) ? items.Length : 5;
             int currentSelectedIndex = inventory != null ? inventory.SelectedIndex : 0;
 
-            for (int i = 0; i < slotCount; i++)
+            // Jika belum ada slot dan ada slotPrefab, instansiasi secara dinamis
+            if (slots.Count == 0 && slotPrefab != null)
             {
-                HotbarSlotUI slotInstance = Instantiate(slotPrefab, slotContainer);
-                InventoryItem item = (items != null && i < items.Length) ? items[i] : null;
-                bool isSelected = (i == currentSelectedIndex);
-
-                slotInstance.Setup(i, item, isSelected);
-                spawnedSlots.Add(slotInstance);
-            }
-
-            isInitialized = true;
-        }
-
-        private void ClearExistingSlots()
-        {
-            foreach (var slot in spawnedSlots)
-            {
-                if (slot != null)
+                int count = (items != null && items.Length > 0) ? items.Length : 5;
+                for (int i = 0; i < count; i++)
                 {
-                    Destroy(slot.gameObject);
+                    HotbarSlotUI slotInstance = Instantiate(slotPrefab, slotContainer);
+                    slots.Add(slotInstance);
                 }
             }
-            spawnedSlots.Clear();
+
+            // Setup data dan visual tiap slot
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i] == null) continue;
+
+                InventoryItem item = (items != null && i < items.Length) ? items[i] : null;
+                bool isSelected = (i == currentSelectedIndex);
+                slots[i].Setup(i, item, isSelected);
+            }
         }
 
         private void BindEvents()
@@ -111,18 +102,18 @@ namespace MoonlitHomestead
         /// <summary>
         /// Callback saat item dipilih pada InventoryHotbar.
         /// </summary>
-        private void HandleItemSelected(int selectedIndex, InventoryItem selectedItem)
+        public void HandleItemSelected(int index, InventoryItem item)
         {
-            for (int i = 0; i < spawnedSlots.Count; i++)
+            for (int i = 0; i < slots.Count; i++)
             {
-                if (spawnedSlots[i] != null)
+                if (slots[i] != null)
                 {
-                    spawnedSlots[i].SetSelected(i == selectedIndex);
+                    slots[i].SetSelected(i == index);
                 }
             }
         }
 
-        private void SyncSelectionWithInventory()
+        public void SyncSelectionWithInventory()
         {
             if (InventoryHotbar.Instance == null) return;
             HandleItemSelected(InventoryHotbar.Instance.SelectedIndex, InventoryHotbar.Instance.CurrentItem);
@@ -133,9 +124,9 @@ namespace MoonlitHomestead
         /// </summary>
         public void UpdateSlotItem(int slotIndex, InventoryItem item)
         {
-            if (slotIndex >= 0 && slotIndex < spawnedSlots.Count && spawnedSlots[slotIndex] != null)
+            if (slotIndex >= 0 && slotIndex < slots.Count && slots[slotIndex] != null)
             {
-                spawnedSlots[slotIndex].UpdateItem(item);
+                slots[slotIndex].UpdateItem(item);
             }
         }
     }

@@ -8,8 +8,8 @@ namespace MoonlitHomestead
     public class GameHUD : MonoBehaviour
     {
         [Header("Clock & Loop UI")]
-        [SerializeField] private Text clockText;
-        [SerializeField] private Text loopText;
+        [SerializeField] private TMP_Text clockText;
+        [SerializeField] private TMP_Text loopText;
         [SerializeField] private RectTransform hourHandTransform;
         [SerializeField] private RectTransform minuteHandTransform;
 
@@ -20,10 +20,10 @@ namespace MoonlitHomestead
 
         [Header("Dialogue / Notification UI")]
         [SerializeField] private GameObject dialoguePanel;
-        [SerializeField] private Text dialogueText;
+        [SerializeField] private TMP_Text dialogueText;
 
         [Header("Item Feedback UI (Optional)")]
-        [SerializeField] private Text itemText;
+        [SerializeField] private TMP_Text itemText;
 
         public static GameHUD Instance { get; private set; }
 
@@ -83,12 +83,12 @@ namespace MoonlitHomestead
             if (clockText == null)
             {
                 var go = GameObject.Find("ClockText");
-                if (go != null) clockText = go.GetComponent<Text>();
+                if (go != null) clockText = go.GetComponent<TMP_Text>();
             }
             if (loopText == null)
             {
                 var go = GameObject.Find("LoopText");
-                if (go != null) loopText = go.GetComponent<Text>();
+                if (go != null) loopText = go.GetComponent<TMP_Text>();
             }
             if (hourHandTransform == null)
             {
@@ -121,12 +121,12 @@ namespace MoonlitHomestead
             if (dialogueText == null)
             {
                 var go = GameObject.Find("DialogueText");
-                if (go != null) dialogueText = go.GetComponent<Text>();
+                if (go != null) dialogueText = go.GetComponent<TMP_Text>();
             }
             if (itemText == null)
             {
                 var go = GameObject.Find("HotbarText");
-                if (go != null) itemText = go.GetComponent<Text>();
+                if (go != null) itemText = go.GetComponent<TMP_Text>();
             }
         }
 

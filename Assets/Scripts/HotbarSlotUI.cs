@@ -1,17 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 namespace MoonlitHomestead
 {
-    public class HotbarSlotUI : MonoBehaviour
+    public class HotbarSlotUI : MonoBehaviour, IPointerClickHandler
     {
         [Header("UI References")]
         [SerializeField] private Image backgroundImage;
         [SerializeField] private Image selectedHighlight;
         [SerializeField] private Image itemIconImage;
-        [SerializeField] private Text keybindText;
-        [SerializeField] private TMP_Text keybindTextTMP;
+        [SerializeField] private TMP_Text keybindText;
 
         public int SlotIndex { get; private set; } = -1;
 
@@ -22,14 +22,9 @@ namespace MoonlitHomestead
         {
             SlotIndex = slotIndex;
 
-            string label = (slotIndex + 1).ToString();
-            if (keybindTextTMP != null)
-            {
-                keybindTextTMP.text = label;
-            }
             if (keybindText != null)
             {
-                keybindText.text = label;
+                keybindText.text = (slotIndex + 1).ToString();
             }
 
             UpdateItem(item);
@@ -63,6 +58,17 @@ namespace MoonlitHomestead
             {
                 itemIconImage.sprite = null;
                 itemIconImage.gameObject.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// Handler klik mouse untuk memilih slot item ini.
+        /// </summary>
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (InventoryHotbar.Instance != null && SlotIndex >= 0)
+            {
+                InventoryHotbar.Instance.SelectItem(SlotIndex);
             }
         }
     }

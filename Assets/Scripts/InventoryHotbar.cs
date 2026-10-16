@@ -70,6 +70,28 @@ namespace MoonlitHomestead
                     new InventoryItem { id = "Journal", type = ItemType.Journal, displayName = "Jurnal (Journal)" }
                 };
             }
+
+#if UNITY_EDITOR
+            if (items != null)
+            {
+                string[] defaultSpritePaths = new string[]
+                {
+                    "Assets/Sprites/UI/Items/item_hoe.png",
+                    "Assets/Sprites/UI/Items/item_seed_pouch.png",
+                    "Assets/Sprites/UI/Items/item_watering_can.png",
+                    "Assets/Sprites/UI/Items/item_pocket_watch.png",
+                    "Assets/Sprites/UI/Items/item_journal.png"
+                };
+
+                for (int i = 0; i < items.Length && i < defaultSpritePaths.Length; i++)
+                {
+                    if (items[i] != null && items[i].icon == null)
+                    {
+                        items[i].icon = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(defaultSpritePaths[i]);
+                    }
+                }
+            }
+#endif
         }
 
         private void Update()

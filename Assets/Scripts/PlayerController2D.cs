@@ -30,6 +30,20 @@ namespace MoonlitHomestead
 
         public Vector2 FacingDirection { get; private set; } = Vector2.right;
         public bool IsGrounded => isGrounded;
+        public bool IsMovementLocked => movementLockTimer > 0f;
+
+        private float movementLockTimer = 0f;
+
+        public void LockMovement(float duration)
+        {
+            movementLockTimer = Mathf.Max(movementLockTimer, duration);
+            horizontalInput = 0f;
+            jumpRequested = false;
+            if (rb != null)
+            {
+                rb.velocity = new Vector2(0f, rb.velocity.y);
+            }
+        }
 
         private void Awake()
         {
@@ -56,11 +70,20 @@ namespace MoonlitHomestead
 
         private void Update()
         {
-            horizontalInput = Input.GetAxisRaw("Horizontal");
-
-            if (Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W))
+            if (movementLockTimer > 0f)
             {
-                jumpRequested = true;
+                movementLockTimer -= Time.deltaTime;
+                horizontalInput = 0f;
+                jumpRequested = false;
+            }
+            else
+            {
+                horizontalInput = Input.GetAxisRaw("Horizontal");
+
+                if (Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W))
+                {
+                    jumpRequested = true;
+                }
             }
 
             UpdateFacingAndAnimation();
@@ -69,6 +92,12 @@ namespace MoonlitHomestead
         private void FixedUpdate()
         {
             CheckGrounded();
+
+            if (IsMovementLocked)
+            {
+                rb.velocity = new Vector2(0f, rb.velocity.y);
+                return;
+            }
 
             // Smooth Horizontal Velocity using Acceleration & Deceleration
             float targetVelocityX = horizontalInput * moveSpeed;
