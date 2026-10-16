@@ -103,7 +103,7 @@ namespace MoonlitHomestead
             }
         }
 
-        private FarmPlot GetBestInteractablePlot(out Vector2 detectionOrigin)
+        private FarmPlot GetBestInteractablePlot(out Vector2 detectionOrigin, out float bestDistance)
         {
             float facingX = 1f;
             if (controller != null && Mathf.Abs(controller.FacingDirection.x) > 0.01f)
@@ -115,7 +115,7 @@ namespace MoonlitHomestead
 
             int hitCount = Physics2D.OverlapCircleNonAlloc(detectionOrigin, interactRange, hitBuffer, interactableLayer);
             FarmPlot bestPlot = null;
-            float closestDistance = float.MaxValue;
+            bestDistance = float.MaxValue;
 
             for (int i = 0; i < hitCount; i++)
             {
@@ -136,14 +136,60 @@ namespace MoonlitHomestead
                 }
 
                 float distance = Vector2.Distance(detectionOrigin, closestPoint);
-                if (distance < closestDistance)
+                if (distance < bestDistance)
                 {
-                    closestDistance = distance;
+                    bestDistance = distance;
                     bestPlot = plot;
                 }
             }
 
             return bestPlot;
+        }
+
+        private FarmPlot GetBestInteractablePlot(out Vector2 detectionOrigin)
+        {
+            return GetBestInteractablePlot(out detectionOrigin, out _);
+        }
+
+        private AncientWell GetBestInteractableWell(out Vector2 detectionOrigin, out float bestDistance)
+        {
+            float facingX = 1f;
+            if (controller != null && Mathf.Abs(controller.FacingDirection.x) > 0.01f)
+            {
+                facingX = Mathf.Sign(controller.FacingDirection.x);
+            }
+
+            detectionOrigin = (Vector2)transform.position + new Vector2(facingX * groundOffset.x, groundOffset.y);
+
+            int hitCount = Physics2D.OverlapCircleNonAlloc(detectionOrigin, interactRange + 0.6f, hitBuffer, interactableLayer);
+            AncientWell bestWell = null;
+            bestDistance = float.MaxValue;
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                Collider2D col = hitBuffer[i];
+                if (col == null || col.gameObject == gameObject) continue;
+
+                AncientWell well = col.GetComponent<AncientWell>();
+                if (well == null) continue;
+
+                Vector2 closestPoint = col.ClosestPoint(detectionOrigin);
+                float horizontalRel = (closestPoint.x - transform.position.x) * facingX;
+                if (horizontalRel < -0.3f)
+                {
+                    // Target sumur berada di belakang tubuh player
+                    continue;
+                }
+
+                float distance = Vector2.Distance(detectionOrigin, closestPoint);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestWell = well;
+                }
+            }
+
+            return bestWell;
         }
 
         public void TriggerHoeAction()
@@ -208,8 +254,10 @@ namespace MoonlitHomestead
                 selectedItem = InventoryHotbar.Instance.CurrentItem.Type;
             }
 
-            FarmPlot plot = GetBestInteractablePlot(out _);
-            if (plot != null)
+            FarmPlot plot = GetBestInteractablePlot(out _, out float plotDist);
+            AncientWell well = GetBestInteractableWell(out _, out float wellDist);
+
+            if (plot != null && (well == null || plotDist <= wellDist))
             {
                 if (plot.CurrentState == PlotState.Resonated && (selectedItem == ItemType.Hoe || selectedItem == ItemType.None))
                 {
@@ -228,6 +276,14 @@ namespace MoonlitHomestead
                     TriggerWaterAction();
                 }
                 plot.Interact(selectedItem);
+            }
+            else if (well != null)
+            {
+                if (selectedItem == ItemType.WateringCan)
+                {
+                    TriggerWaterAction();
+                }
+                well.Interact(selectedItem);
             }
             else
             {
@@ -251,9 +307,10 @@ namespace MoonlitHomestead
                 if (interactionPrompt == null) return;
             }
 
-            FarmPlot targetPlot = GetBestInteractablePlot(out _);
+            FarmPlot targetPlot = GetBestInteractablePlot(out _, out float plotDist);
+            AncientWell targetWell = GetBestInteractableWell(out _, out float wellDist);
 
-            if (targetPlot != null)
+            if (targetPlot != null && (targetWell == null || plotDist <= wellDist))
             {
                 (Sprite icon, string actionName) = GetPlotPromptData(targetPlot.CurrentState);
                 Vector3 promptPos = (positionMode == PromptPositionMode.AbovePlayerHead)
@@ -261,6 +318,14 @@ namespace MoonlitHomestead
                     : targetPlot.transform.position + targetOffset;
 
                 interactionPrompt.Show(promptPos, icon, actionName, "E");
+            }
+            else if (targetWell != null)
+            {
+                Vector3 promptPos = (positionMode == PromptPositionMode.AbovePlayerHead)
+                    ? transform.position + playerHeadOffset
+                    : targetWell.transform.position + targetWell.PromptOffset;
+
+                interactionPrompt.Show(promptPos, iconWater, targetWell.ActionName, targetWell.HotkeyText);
             }
             else
             {

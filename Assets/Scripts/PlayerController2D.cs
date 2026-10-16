@@ -50,6 +50,7 @@ namespace MoonlitHomestead
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 3f;
             rb.freezeRotation = true;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             if (spriteRenderer == null)
