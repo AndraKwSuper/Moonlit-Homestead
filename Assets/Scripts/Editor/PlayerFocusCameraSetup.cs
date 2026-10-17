@@ -53,10 +53,12 @@ namespace MoonlitHomestead.Editor
             }
 
             follow.Offset = new Vector3(0f, 0.7f, -10f); // Komposisi seimbang sedikit di atas kaki Elian
-            follow.SmoothSpeed = 5f;
-            follow.UseBounds = true;
-            follow.MinX = -9f;
-            follow.MaxX = 9f;
+            follow.SmoothTime = 0.15f;
+            follow.WorldMinX = -13.5f;
+            follow.WorldMaxX = 13.5f;
+            follow.WorldMinY = -2.2f;
+            follow.WorldMaxY = 4.5f;
+            follow.ClampCamera = true;
             EditorUtility.SetDirty(follow);
 
             // 2. Setting Layering Player (Selalu Terlihat di Depan Ground & Well)

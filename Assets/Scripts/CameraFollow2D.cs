@@ -2,20 +2,27 @@ using UnityEngine;
 
 namespace MoonlitHomestead
 {
+    [RequireComponent(typeof(Camera))]
     public class CameraFollow2D : MonoBehaviour
     {
         [Header("Target & Offset")]
-        [Tooltip("Transform target yang diikuti kamera. Otomatis mencari Player jika kosong.")]
         [SerializeField] private Transform target;
-        [Tooltip("Offset posisi kamera relatif terhadap target.")]
-        [SerializeField] private Vector3 offset = new Vector3(0f, 0.8f, -10f);
-        [Tooltip("Kecepatan lerp penghalusan pergerakan kamera.")]
-        [SerializeField] private float smoothSpeed = 5f;
+        [SerializeField] private Vector3 offset = new Vector3(0f, 0.7f, -10f);
+        [SerializeField] private float smoothTime = 0.15f;
 
-        [Header("Batas Gerak Kamera (Clamping)")]
-        [SerializeField] private bool useBounds = true;
-        [SerializeField] private float minX = -10f;
-        [SerializeField] private float maxX = 10f;
+        [Header("World Boundaries (Batas Absolut Dunia)")]
+        [Tooltip("Batas paling kiri dunia game (misal: tebing kiri di X = -13.5).")]
+        [SerializeField] private float worldMinX = -13.5f;
+        [Tooltip("Batas paling kanan dunia game (misal: tebing kanan di X = 13.5).")]
+        [SerializeField] private float worldMaxX = 13.5f;
+        [Tooltip("Batas paling bawah (mencegah kamera melihat ke bawah tanah/void).")]
+        [SerializeField] private float worldMinY = -2.2f;
+        [Tooltip("Batas atas langit.")]
+        [SerializeField] private float worldMaxY = 4.5f;
+        [SerializeField] private bool clampCamera = true;
+
+        private Camera cam;
+        private Vector3 currentVelocity = Vector3.zero;
 
         public Transform Target
         {
@@ -29,60 +36,81 @@ namespace MoonlitHomestead
             set => offset = value;
         }
 
-        public float SmoothSpeed
-        {
-            get => smoothSpeed;
-            set => smoothSpeed = value;
-        }
-
         public float SmoothTime
         {
-            get => 1f / Mathf.Max(0.01f, smoothSpeed);
-            set => smoothSpeed = 1f / Mathf.Max(0.01f, value);
+            get => smoothTime;
+            set => smoothTime = value;
         }
 
+        public float SmoothSpeed
+        {
+            get => 1f / Mathf.Max(0.001f, smoothTime);
+            set => smoothTime = 1f / Mathf.Max(0.001f, value);
+        }
+
+        public float WorldMinX
+        {
+            get => worldMinX;
+            set => worldMinX = value;
+        }
+
+        public float WorldMaxX
+        {
+            get => worldMaxX;
+            set => worldMaxX = value;
+        }
+
+        public float WorldMinY
+        {
+            get => worldMinY;
+            set => worldMinY = value;
+        }
+
+        public float WorldMaxY
+        {
+            get => worldMaxY;
+            set => worldMaxY = value;
+        }
+
+        public bool ClampCamera
+        {
+            get => clampCamera;
+            set => clampCamera = value;
+        }
+
+        // Backward compatibility
         public bool UseBounds
         {
-            get => useBounds;
-            set => useBounds = value;
+            get => clampCamera;
+            set => clampCamera = value;
         }
 
         public float MinX
         {
-            get => minX;
-            set => minX = value;
+            get => worldMinX;
+            set => worldMinX = value;
         }
 
         public float MaxX
         {
-            get => maxX;
-            set => maxX = value;
+            get => worldMaxX;
+            set => worldMaxX = value;
         }
 
         private void Awake()
         {
-            if (target == null)
-            {
-                FindPlayerTarget();
-            }
+            cam = GetComponent<Camera>();
+            if (target == null) FindPlayerTarget();
         }
 
         private void Start()
         {
-            if (target == null)
-            {
-                FindPlayerTarget();
-            }
-
+            if (cam == null) cam = GetComponent<Camera>();
+            if (target == null) FindPlayerTarget();
             if (target != null)
             {
-                Vector3 targetPos = target.position + offset;
-                targetPos.z = offset.z;
-                if (useBounds)
-                {
-                    targetPos.x = Mathf.Clamp(targetPos.x, minX, maxX);
-                }
-                transform.position = targetPos;
+                Vector3 startPos = CalculateClampedPosition(target.position + offset);
+                transform.position = startPos;
             }
         }
 
@@ -95,24 +123,59 @@ namespace MoonlitHomestead
             }
 
             Vector3 targetPos = target.position + offset;
-            targetPos.z = offset.z;
+            Vector3 clampedTargetPos = CalculateClampedPosition(targetPos);
 
-            if (useBounds)
+            transform.position = Vector3.SmoothDamp(transform.position, clampedTargetPos, ref currentVelocity, smoothTime);
+        }
+
+        private Vector3 CalculateClampedPosition(Vector3 desiredPos)
+        {
+            desiredPos.z = offset.z;
+            if (!clampCamera || cam == null) return desiredPos;
+
+            float camHalfHeight = cam.orthographicSize;
+            float camHalfWidth = camHalfHeight * cam.aspect;
+
+            float minAllowedX = worldMinX + camHalfWidth;
+            float maxAllowedX = worldMaxX - camHalfWidth;
+
+            if (minAllowedX < maxAllowedX)
             {
-                targetPos.x = Mathf.Clamp(targetPos.x, minX, maxX);
+                desiredPos.x = Mathf.Clamp(desiredPos.x, minAllowedX, maxAllowedX);
+            }
+            else
+            {
+                desiredPos.x = (worldMinX + worldMaxX) * 0.5f;
             }
 
-            transform.position = Vector3.Lerp(transform.position, targetPos, smoothSpeed * Time.deltaTime);
+            float minAllowedY = worldMinY + camHalfHeight;
+            float maxAllowedY = worldMaxY - camHalfHeight;
+
+            if (minAllowedY < maxAllowedY)
+            {
+                desiredPos.y = Mathf.Clamp(desiredPos.y, minAllowedY, maxAllowedY);
+            }
+            else
+            {
+                desiredPos.y = (worldMinY + worldMaxY) * 0.5f;
+            }
+
+            return desiredPos;
         }
 
         private void FindPlayerTarget()
         {
             GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
             if (playerGO == null) playerGO = GameObject.Find("Player");
-            if (playerGO != null)
-            {
-                target = playerGO.transform;
-            }
+            if (playerGO != null) target = playerGO.transform;
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.green;
+            Vector3 center = new Vector3((worldMinX + worldMaxX) * 0.5f, (worldMinY + worldMaxY) * 0.5f, 0f);
+            Vector3 size = new Vector3(worldMaxX - worldMinX, worldMaxY - worldMinY, 1f);
+            Gizmos.DrawWireCube(center, size);
         }
     }
 }

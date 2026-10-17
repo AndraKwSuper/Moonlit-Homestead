@@ -101,11 +101,13 @@ namespace MoonlitHomestead.Editor
             groundCol.size = new Vector2(28f, 1.0f);
             groundCol.offset = new Vector2(0f, -1.0f); // Permukaan atas collider berada tepat di bawah telapak kaki Elian tanpa celah vertikal
 
+            Tile tilledSoilTile = (tilledSoilSprite != null) ? GetOrCreateTile(TileAssetFolder + "Tile_Tilled_Soil.asset", tilledSoilSprite) : null;
+
             // 6. Hapus dan susun ulang tile sepanjang X dari -13 sampai +13
             tilemap.ClearAllTiles();
             for (int x = -13; x <= 13; x++)
             {
-                // Permukaan rumput (y = -1)
+                // Permukaan rumput alami (y = -1)
                 Tile surfaceTile = grassTile;
                 if (x == -13) surfaceTile = cliffLeftTile;
                 else if (x == 13) surfaceTile = cliffRightTile;
@@ -120,14 +122,7 @@ namespace MoonlitHomestead.Editor
                 }
             }
 
-            // 7. Pembersihan Objek Lama (Nonaktifkan balok prototipe)
-            GameObject farmPlotsGO = GameObject.Find("FarmPlots");
-            if (farmPlotsGO != null)
-            {
-                farmPlotsGO.SetActive(false);
-                Debug.Log("[GardenWellSafeSetup] Objek prototipe 'FarmPlots' dinonaktifkan (SetActive(false)).");
-            }
-
+            // 7. Pembersihan Objek Lama
             GameObject oldGround = GameObject.Find("Ground");
             if (oldGround != null)
             {

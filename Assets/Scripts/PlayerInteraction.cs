@@ -11,9 +11,12 @@ namespace MoonlitHomestead
     public class PlayerInteraction : MonoBehaviour
     {
         [Header("Detection Settings (Side-Scroller)")]
-        [SerializeField] private float interactRange = 0.45f;
-        [SerializeField] private Vector2 groundOffset = new Vector2(0.35f, -0.1f);
+        [SerializeField] private float interactRange = 1.2f;
+        [SerializeField] private Vector2 groundOffset = new Vector2(0.4f, -0.2f);
         [SerializeField] private LayerMask interactableLayer = ~0;
+
+        public float InteractRange { get => interactRange; set => interactRange = value; }
+        public Vector2 GroundOffset { get => groundOffset; set => groundOffset = value; }
 
         [Header("Floating Interaction Prompt")]
         [SerializeField] private InteractionPromptUI interactionPrompt;
@@ -259,22 +262,6 @@ namespace MoonlitHomestead
 
             if (plot != null && (well == null || plotDist <= wellDist))
             {
-                if (plot.CurrentState == PlotState.Resonated && (selectedItem == ItemType.Hoe || selectedItem == ItemType.None))
-                {
-                    TriggerHarvestAction();
-                }
-                else if (selectedItem == ItemType.Hoe)
-                {
-                    TriggerHoeAction();
-                }
-                else if (selectedItem == ItemType.Seed && plot.CurrentState == PlotState.Tilled)
-                {
-                    TriggerPlantAction();
-                }
-                else if (selectedItem == ItemType.WateringCan && (plot.CurrentState == PlotState.Planted || plot.CurrentState == PlotState.Mutated))
-                {
-                    TriggerWaterAction();
-                }
                 plot.Interact(selectedItem);
             }
             else if (well != null)
