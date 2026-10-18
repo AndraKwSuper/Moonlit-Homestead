@@ -1944,8 +1944,8 @@ MonoBehaviour:
   target: {fileID: 139110769}
   offset: {x: 0, y: 0.7, z: -10}
   smoothTime: 0.15
-  worldMinX: -9.2
-  worldMaxX: 9.2
+  worldMinX: -9
+  worldMaxX: 9
   worldMinY: -2.2
   worldMaxY: 4.5
   clampCamera: 1
@@ -3924,7 +3924,7 @@ Transform:
   m_GameObject: {fileID: 1243836732}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.46, y: 0.5, z: 0}
+  m_LocalPosition: {x: 8.59, y: 0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3943,9 +3943,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetSceneName: AltarJam
-  spawnPositionInTargetScene: {x: -8, y: 0, z: 0}
+  spawnPositionInTargetScene: {x: -4.37, y: 0, z: 0}
   portalLabel: Menuju Reruntuhan Altar
-  allowWalkThrough: 1
+  allowWalkThrough: 0
   walkThroughDirection: {x: 1, y: 0}
   promptOffset: {x: 0, y: 1.4, z: 0}
 --- !u!61 &1243836735
@@ -5063,7 +5063,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 1}
+  m_Offset: {x: -1.0127884, y: 1.6486398}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0}
@@ -5074,7 +5074,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 2, y: 2}
+  m_Size: {x: 1.8406847, y: 3.2972796}
   m_EdgeRadius: 0
 --- !u!212 &1698403149
 SpriteRenderer:
@@ -6127,7 +6127,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: -1}
+  m_Offset: {x: 0, y: -0.79}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}

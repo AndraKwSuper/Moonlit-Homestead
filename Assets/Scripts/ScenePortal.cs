@@ -102,7 +102,7 @@ namespace MoonlitHomestead
 
             if (ePressed || walkTriggered)
             {
-                StartCoroutine(ExecuteTransition());
+                TriggerTransition();
             }
         }
 
@@ -133,10 +133,27 @@ namespace MoonlitHomestead
             }
         }
 
-        private IEnumerator ExecuteTransition()
+        public void TriggerTransition()
+        {
+            if (IsTransitioning) return;
+            HidePrompt();
+
+            // Jalankan coroutine di GameObject persistent (DontDestroyOnLoad) agar tidak terputus saat scene asal di-unload
+            MonoBehaviour runner = (MonoBehaviour)LoopTransitionUI.Instance ?? PlayerController2D.Instance;
+            if (runner != null)
+            {
+                runner.StartCoroutine(ExecuteTransitionRoutine(targetSceneName, spawnPositionInTargetScene));
+            }
+            else
+            {
+                StartCoroutine(ExecuteTransitionRoutine(targetSceneName, spawnPositionInTargetScene));
+            }
+        }
+
+        private static IEnumerator ExecuteTransitionRoutine(string targetScene, Vector3 targetSpawnPos)
         {
             IsTransitioning = true;
-            HidePrompt();
+            NextSpawnPosition = targetSpawnPos;
 
             // Kunci pergerakan player
             PlayerController2D player = PlayerController2D.Instance ?? Object.FindAnyObjectByType<PlayerController2D>();
@@ -145,35 +162,42 @@ namespace MoonlitHomestead
                 player.LockMovement(3f);
             }
 
-            NextSpawnPosition = spawnPositionInTargetScene;
-
             // Fade Out layar
             if (LoopTransitionUI.Instance != null)
             {
-                yield return LoopTransitionUI.Instance.FadeOut(0.5f);
+                yield return LoopTransitionUI.Instance.FadeOut(0.4f);
             }
             else
             {
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(0.4f);
             }
 
             // Load target scene
-            AsyncOperation op = SceneManager.LoadSceneAsync(targetSceneName);
+            AsyncOperation op = SceneManager.LoadSceneAsync(targetScene);
             while (!op.isDone)
             {
                 yield return null;
             }
 
+            // Tunggu 1 frame agar scene dan kamera baru terinisialisasi
+            yield return null;
+
             // Pasang posisi player dan kamera di scene baru
-            ApplyPlayerAndCameraPosition(spawnPositionInTargetScene);
+            ApplyPlayerAndCameraPosition(targetSpawnPos);
 
             // Beri jeda 0.1s agar scene settles
             yield return new WaitForSeconds(0.1f);
 
-            // Fade In layar
+            // Fade In layar (membuka kembali overlay)
             if (LoopTransitionUI.Instance != null)
             {
-                yield return LoopTransitionUI.Instance.FadeIn(0.5f);
+                yield return LoopTransitionUI.Instance.FadeIn(0.4f);
+                LoopTransitionUI.Instance.ForceCloseOverlay();
+            }
+
+            if (player != null)
+            {
+                player.LockMovement(0f);
             }
 
             IsTransitioning = false;

@@ -278,6 +278,34 @@ namespace MoonlitHomestead.Editor
             if (pMaxY != null) pMaxY.floatValue = 4.5f;
             soBounds.ApplyModifiedProperties();
 
+            // 9. Main Camera untuk AltarJam (Mencegah layar blank saat scene dibuka / dites standalone)
+            GameObject camGO = GameObject.FindWithTag("MainCamera");
+            if (camGO == null)
+            {
+                camGO = GameObject.Find("Main Camera");
+            }
+            if (camGO == null)
+            {
+                camGO = new GameObject("Main Camera");
+                camGO.tag = "MainCamera";
+            }
+            camGO.transform.position = new Vector3(0f, 0.7f, -10f);
+            Camera cam = GetOrAdd<Camera>(camGO);
+            cam.orthographic = true;
+            cam.orthographicSize = 3.2f;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(11f / 255f, 8f / 255f, 19f / 255f);
+            GetOrAdd<AudioListener>(camGO);
+
+            CameraFollow2D camFollow = GetOrAdd<CameraFollow2D>(camGO);
+            camFollow.Offset = new Vector3(0f, 0.7f, -10f);
+            camFollow.SmoothTime = 0.15f;
+            camFollow.WorldMinX = -10.5f;
+            camFollow.WorldMaxX = 10.5f;
+            camFollow.WorldMinY = -2.2f;
+            camFollow.WorldMaxY = 4.5f;
+            camFollow.ClampCamera = true;
+
             // Simpan Scene AltarJam
             EditorSceneManager.MarkSceneDirty(altarScene);
             EditorSceneManager.SaveScene(altarScene, AltarScenePath);

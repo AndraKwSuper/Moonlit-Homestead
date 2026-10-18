@@ -40,19 +40,18 @@ namespace MoonlitHomestead
             }
             Instance = this;
 
-            if (canvasGroup == null)
-            {
-                canvasGroup = GetComponent<CanvasGroup>();
-            }
+            ForceCloseOverlay();
+        }
 
-            // Saat Awake(), sembunyikan overlay
+        public void ForceCloseOverlay()
+        {
+            if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
             if (canvasGroup != null)
             {
                 canvasGroup.alpha = 0f;
                 canvasGroup.blocksRaycasts = false;
                 canvasGroup.interactable = false;
             }
-
             SetTextAlpha(0f);
         }
 
