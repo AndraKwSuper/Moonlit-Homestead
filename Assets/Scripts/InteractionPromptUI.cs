@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 namespace MoonlitHomestead
@@ -10,6 +11,7 @@ namespace MoonlitHomestead
 
         [Header("UI References")]
         [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private Canvas canvas;
         [SerializeField] private Image plaqueBackground;
         [SerializeField] private Image keyBadgeImage;
         [SerializeField] private TMP_Text keyText;
@@ -25,6 +27,7 @@ namespace MoonlitHomestead
         private Vector3 baseWorldPosition;
         private float targetAlpha = 0f;
         private bool isShowing = false;
+        private object currentOwner = null;
 
         public bool IsShowing => isShowing;
 
@@ -38,10 +41,27 @@ namespace MoonlitHomestead
             Instance = this;
             DontDestroyOnLoad(transform.root.gameObject);
 
+            if (canvas == null) canvas = GetComponent<Canvas>();
+            if (canvasGroup == null) canvasGroup = GetComponentInChildren<CanvasGroup>();
+
+            EnsureCameraAssigned();
+
             if (canvasGroup != null)
             {
                 canvasGroup.alpha = 0f;
             }
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+            EnsureCameraAssigned();
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
         }
 
         private void OnDestroy()
@@ -52,8 +72,34 @@ namespace MoonlitHomestead
             }
         }
 
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            EnsureCameraAssigned();
+            Hide(null, true);
+        }
+
+        public void EnsureCameraAssigned()
+        {
+            if (canvas == null) canvas = GetComponent<Canvas>();
+            if (canvas != null && (canvas.worldCamera == null || !canvas.worldCamera.gameObject.activeInHierarchy))
+            {
+                Camera cam = Camera.main;
+                if (cam == null) cam = Object.FindAnyObjectByType<Camera>();
+                if (cam != null)
+                {
+                    canvas.worldCamera = cam;
+                }
+            }
+        }
+
         private void Update()
         {
+            // Pastikan camera selalu valid
+            if (canvas != null && (canvas.worldCamera == null || !canvas.worldCamera.gameObject.activeInHierarchy))
+            {
+                EnsureCameraAssigned();
+            }
+
             // Smooth Fade
             if (canvasGroup != null)
             {
@@ -68,8 +114,12 @@ namespace MoonlitHomestead
             }
         }
 
-        public void Show(Vector3 worldPos, Sprite actionIcon, string actionName, string keyName = "E")
+        public void Show(Vector3 worldPos, Sprite actionIcon, string actionName, string keyName = "E", object requester = null)
         {
+            EnsureCameraAssigned();
+
+            currentOwner = requester;
+
             if (!isShowing && (canvasGroup == null || canvasGroup.alpha < 0.05f))
             {
                 transform.position = worldPos;
@@ -103,13 +153,17 @@ namespace MoonlitHomestead
             }
         }
 
-        /// <summary>
-        /// Menyembunyikan floating interaction prompt dengan smooth fade out.
-        /// </summary>
-        public void Hide()
+        public void Hide(object requester = null, bool force = false)
         {
+            if (!force && currentOwner != null && requester != null && currentOwner != requester)
+            {
+                // Ditolak: Jangan sembunyikan jika requester lain sedang memegang kepemilikan prompt
+                return;
+            }
+
             targetAlpha = 0f;
             isShowing = false;
+            currentOwner = null;
         }
     }
 }

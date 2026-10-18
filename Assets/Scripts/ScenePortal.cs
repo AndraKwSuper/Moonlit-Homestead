@@ -63,10 +63,12 @@ namespace MoonlitHomestead
                 }
             }
 
-            CameraFollow2D cam = CameraFollow2D.Instance ?? Object.FindAnyObjectByType<CameraFollow2D>();
+            CameraFollow2D cam = Object.FindAnyObjectByType<CameraFollow2D>();
             if (cam != null)
             {
-                cam.transform.position = new Vector3(spawnPos.x, spawnPos.y + cam.Offset.y, cam.transform.position.z);
+                cam.Target = player != null ? player.transform : null;
+                Vector3 targetPos = new Vector3(spawnPos.x + cam.Offset.x, spawnPos.y + cam.Offset.y, cam.Offset.z);
+                cam.transform.position = cam.CalculateClampedPosition(targetPos);
             }
         }
 
@@ -121,7 +123,7 @@ namespace MoonlitHomestead
             if (InteractionPromptUI.Instance != null && playerTransform != null)
             {
                 Vector3 promptPos = playerTransform.position + promptOffset;
-                InteractionPromptUI.Instance.Show(promptPos, null, portalLabel, "E");
+                InteractionPromptUI.Instance.Show(promptPos, null, portalLabel, "E", this);
             }
         }
 
@@ -129,7 +131,7 @@ namespace MoonlitHomestead
         {
             if (InteractionPromptUI.Instance != null)
             {
-                InteractionPromptUI.Instance.Hide();
+                InteractionPromptUI.Instance.Hide(this);
             }
         }
 
@@ -142,15 +144,15 @@ namespace MoonlitHomestead
             MonoBehaviour runner = (MonoBehaviour)LoopTransitionUI.Instance ?? PlayerController2D.Instance;
             if (runner != null)
             {
-                runner.StartCoroutine(ExecuteTransitionRoutine(targetSceneName, spawnPositionInTargetScene));
+                runner.StartCoroutine(ExecuteTransitionRoutine(targetSceneName, spawnPositionInTargetScene, portalLabel));
             }
             else
             {
-                StartCoroutine(ExecuteTransitionRoutine(targetSceneName, spawnPositionInTargetScene));
+                StartCoroutine(ExecuteTransitionRoutine(targetSceneName, spawnPositionInTargetScene, portalLabel));
             }
         }
 
-        private static IEnumerator ExecuteTransitionRoutine(string targetScene, Vector3 targetSpawnPos)
+        private static IEnumerator ExecuteTransitionRoutine(string targetScene, Vector3 targetSpawnPos, string label)
         {
             IsTransitioning = true;
             NextSpawnPosition = targetSpawnPos;
@@ -162,10 +164,10 @@ namespace MoonlitHomestead
                 player.LockMovement(3f);
             }
 
-            // Fade Out layar
+            // Fade Out layar & tampilkan teks transisi portal
             if (LoopTransitionUI.Instance != null)
             {
-                yield return LoopTransitionUI.Instance.FadeOut(0.4f);
+                yield return LoopTransitionUI.Instance.PlaySceneTransition(label, 0.4f);
             }
             else
             {
@@ -185,14 +187,13 @@ namespace MoonlitHomestead
             // Pasang posisi player dan kamera di scene baru
             ApplyPlayerAndCameraPosition(targetSpawnPos);
 
-            // Beri jeda 0.1s agar scene settles
-            yield return new WaitForSeconds(0.1f);
+            // Beri jeda sejenak agar pemain sempat membaca nama area & posisi settles
+            yield return new WaitForSeconds(0.25f);
 
             // Fade In layar (membuka kembali overlay)
             if (LoopTransitionUI.Instance != null)
             {
-                yield return LoopTransitionUI.Instance.FadeIn(0.4f);
-                LoopTransitionUI.Instance.ForceCloseOverlay();
+                yield return LoopTransitionUI.Instance.FinishSceneTransition(0.4f);
             }
 
             if (player != null)

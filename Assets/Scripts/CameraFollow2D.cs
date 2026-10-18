@@ -101,15 +101,14 @@ namespace MoonlitHomestead
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
             Instance = this;
-            DontDestroyOnLoad(transform.root.gameObject);
-
             cam = GetComponent<Camera>();
+            if (target == null) FindPlayerTarget();
+        }
+
+        private void OnEnable()
+        {
+            Instance = this;
             if (target == null) FindPlayerTarget();
         }
 
@@ -138,7 +137,7 @@ namespace MoonlitHomestead
             transform.position = Vector3.SmoothDamp(transform.position, clampedTargetPos, ref currentVelocity, smoothTime);
         }
 
-        private Vector3 CalculateClampedPosition(Vector3 desiredPos)
+        public Vector3 CalculateClampedPosition(Vector3 desiredPos)
         {
             desiredPos.z = offset.z;
             if (!clampCamera || cam == null) return desiredPos;

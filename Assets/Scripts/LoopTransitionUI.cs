@@ -43,6 +43,69 @@ namespace MoonlitHomestead
             ForceCloseOverlay();
         }
 
+        public void EnsureTextComponents()
+        {
+            if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+            if (overlayImage == null) overlayImage = GetComponent<Image>();
+
+            if (subtitleText == null)
+            {
+                Transform t = transform.Find("Subtitle");
+                if (t != null) subtitleText = t.GetComponent<TMP_Text>();
+            }
+            if (loopNumberText == null)
+            {
+                Transform t = transform.Find("LoopTitle");
+                if (t != null) loopNumberText = t.GetComponent<TMP_Text>();
+            }
+            if (loreQuoteText == null)
+            {
+                Transform t = transform.Find("LoreQuote");
+                if (t != null) loreQuoteText = t.GetComponent<TMP_Text>();
+            }
+
+            TMP_FontAsset defaultFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+
+            if (subtitleText == null)
+            {
+                subtitleText = CreateTMPElement("Subtitle", new Vector2(0f, 40f), new Vector2(800f, 50f), 22f, FontStyles.Normal, new Color32(176, 136, 255, 255), "REALITAS RUNTUH...", defaultFont);
+            }
+            if (loopNumberText == null)
+            {
+                loopNumberText = CreateTMPElement("LoopTitle", new Vector2(0f, -10f), new Vector2(800f, 90f), 64f, FontStyles.Bold, new Color32(112, 255, 229, 255), "LOOP 01", defaultFont);
+            }
+            if (loreQuoteText == null)
+            {
+                loreQuoteText = CreateTMPElement("LoreQuote", new Vector2(0f, -70f), new Vector2(900f, 60f), 16f, FontStyles.Italic, new Color32(192, 192, 192, 255), defaultLoreQuote, defaultFont);
+            }
+        }
+
+        private TMP_Text CreateTMPElement(string name, Vector2 pos, Vector2 size, float fontSize, FontStyles style, Color color, string initialText, TMP_FontAsset font)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(transform, false);
+
+            RectTransform rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = size;
+            rt.localScale = Vector3.one;
+
+            TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
+            if (font != null) tmp.font = font;
+            tmp.text = initialText;
+            tmp.fontSize = fontSize;
+            tmp.fontStyle = style;
+            tmp.color = color;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.raycastTarget = false;
+            tmp.enableWordWrapping = true;
+
+            return tmp;
+        }
+
         public void ForceCloseOverlay()
         {
             if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
@@ -53,6 +116,34 @@ namespace MoonlitHomestead
                 canvasGroup.interactable = false;
             }
             SetTextAlpha(0f);
+        }
+
+        public IEnumerator PlaySceneTransition(string locationName, float fadeOutTime = 0.4f)
+        {
+            EnsureTextComponents();
+
+            if (subtitleText != null)
+            {
+                subtitleText.text = "BERPINDAH REALITAS...";
+            }
+            if (loopNumberText != null)
+            {
+                loopNumberText.text = !string.IsNullOrEmpty(locationName) ? locationName.ToUpper() : "RERUNTUHAN WAKTU";
+            }
+            if (loreQuoteText != null)
+            {
+                loreQuoteText.text = "";
+            }
+
+            SetTextAlpha(1f);
+
+            yield return FadeOut(fadeOutTime);
+        }
+
+        public IEnumerator FinishSceneTransition(float fadeInTime = 0.4f)
+        {
+            yield return FadeIn(fadeInTime);
+            ForceCloseOverlay();
         }
 
         public IEnumerator FadeOut(float duration)
@@ -141,6 +232,8 @@ namespace MoonlitHomestead
 
         public IEnumerator PlayLoopTransition(int loopIndex)
         {
+            EnsureTextComponents();
+
             // 1. Kunci input pergerakan Elian via PlayerController2D.LockMovement(3.5f)
             PlayerController2D player = PlayerController2D.Instance != null ? PlayerController2D.Instance : FindObjectOfType<PlayerController2D>();
             if (player != null)
@@ -160,11 +253,11 @@ namespace MoonlitHomestead
             {
                 loopNumberText.text = $"LOOP {loopIndex:00}";
             }
-            if (subtitleText != null && string.IsNullOrEmpty(subtitleText.text))
+            if (subtitleText != null)
             {
                 subtitleText.text = "REALITAS RUNTUH...";
             }
-            if (loreQuoteText != null && string.IsNullOrEmpty(loreQuoteText.text))
+            if (loreQuoteText != null)
             {
                 loreQuoteText.text = defaultLoreQuote;
             }
@@ -258,18 +351,21 @@ namespace MoonlitHomestead
                 Color c = subtitleText.color;
                 c.a = alpha;
                 subtitleText.color = c;
+                subtitleText.alpha = alpha;
             }
             if (loopNumberText != null)
             {
                 Color c = loopNumberText.color;
                 c.a = alpha;
                 loopNumberText.color = c;
+                loopNumberText.alpha = alpha;
             }
             if (loreQuoteText != null)
             {
                 Color c = loreQuoteText.color;
                 c.a = alpha;
                 loreQuoteText.color = c;
+                loreQuoteText.alpha = alpha;
             }
         }
 

@@ -161,10 +161,10 @@ namespace MoonlitHomestead.Editor
             EditorUtility.SetDirty(overlayGO);
 
             // 5. Simpan Perubahan Scene
-            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
-
             Undo.CollapseUndoOperations(undoGroup);
+            EditorSceneManager.MarkSceneDirty(overlayGO.scene);
+            EditorSceneManager.SaveScene(overlayGO.scene);
+
             Debug.Log("<color=#70FFE5>[LoopTransitionSafeSetup] Berhasil memasang Midnight Collapse & Loop Reset Overlay di HUD_Canvas!</color>");
         }
 
@@ -184,8 +184,8 @@ namespace MoonlitHomestead.Editor
             if (child == null)
             {
                 go = new GameObject(childName, typeof(RectTransform));
-                Undo.RegisterCreatedObjectUndo(go, "Create " + childName);
                 go.transform.SetParent(parent.transform, false);
+                Undo.RegisterCreatedObjectUndo(go, "Create " + childName);
             }
             else
             {
@@ -208,6 +208,8 @@ namespace MoonlitHomestead.Editor
             }
 
             Undo.RecordObject(tmp, "Configure " + childName + " TMP");
+            TMP_FontAsset font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset");
+            if (font != null) tmp.font = font;
             tmp.text = defaultText;
             tmp.fontSize = fontSize;
             tmp.fontStyle = fontStyle;

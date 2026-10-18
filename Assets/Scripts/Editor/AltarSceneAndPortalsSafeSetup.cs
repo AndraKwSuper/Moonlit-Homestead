@@ -166,7 +166,7 @@ namespace MoonlitHomestead.Editor
 
             GameObject bgFarGO = GetOrCreateChild(bgParent, "Background_Far");
             bgFarGO.transform.localPosition = new Vector3(0f, 2.5f, 0f);
-            bgFarGO.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            bgFarGO.transform.localScale = new Vector3(1.8f, 1.8f, 1f);
             SpriteRenderer bgFarSR = GetOrAdd<SpriteRenderer>(bgFarGO);
             bgFarSR.sprite = bgFarSprite;
             bgFarSR.sortingLayerName = "Default";
@@ -174,7 +174,7 @@ namespace MoonlitHomestead.Editor
 
             GameObject bgMidGO = GetOrCreateChild(bgParent, "Background_Mid");
             bgMidGO.transform.localPosition = new Vector3(0f, 1.1f, 0f);
-            bgMidGO.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            bgMidGO.transform.localScale = new Vector3(1.8f, 1.8f, 1f);
             SpriteRenderer bgMidSR = GetOrAdd<SpriteRenderer>(bgMidGO);
             bgMidSR.sprite = bgMidSprite;
             bgMidSR.sortingLayerName = "Default";
@@ -272,10 +272,10 @@ namespace MoonlitHomestead.Editor
             var pMaxX = soBounds.FindProperty("maxX");
             var pMinY = soBounds.FindProperty("minY");
             var pMaxY = soBounds.FindProperty("maxY");
-            if (pMinX != null) pMinX.floatValue = -10.5f;
-            if (pMaxX != null) pMaxX.floatValue = 10.5f;
-            if (pMinY != null) pMinY.floatValue = -2.2f;
-            if (pMaxY != null) pMaxY.floatValue = 4.5f;
+            if (pMinX != null) pMinX.floatValue = -10.0f;
+            if (pMaxX != null) pMaxX.floatValue = 10.0f;
+            if (pMinY != null) pMinY.floatValue = -1.2f;
+            if (pMaxY != null) pMaxY.floatValue = 3.5f;
             soBounds.ApplyModifiedProperties();
 
             // 9. Main Camera untuk AltarJam (Mencegah layar blank saat scene dibuka / dites standalone)
@@ -300,10 +300,10 @@ namespace MoonlitHomestead.Editor
             CameraFollow2D camFollow = GetOrAdd<CameraFollow2D>(camGO);
             camFollow.Offset = new Vector3(0f, 0.7f, -10f);
             camFollow.SmoothTime = 0.15f;
-            camFollow.WorldMinX = -10.5f;
-            camFollow.WorldMaxX = 10.5f;
-            camFollow.WorldMinY = -2.2f;
-            camFollow.WorldMaxY = 4.5f;
+            camFollow.WorldMinX = -10.0f;
+            camFollow.WorldMaxX = 10.0f;
+            camFollow.WorldMinY = -1.2f;
+            camFollow.WorldMaxY = 3.5f;
             camFollow.ClampCamera = true;
 
             // Simpan Scene AltarJam

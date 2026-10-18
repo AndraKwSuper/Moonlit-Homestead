@@ -304,7 +304,7 @@ namespace MoonlitHomestead
                     ? transform.position + playerHeadOffset
                     : targetPlot.transform.position + targetOffset;
 
-                interactionPrompt.Show(promptPos, icon, actionName, "E");
+                interactionPrompt.Show(promptPos, icon, actionName, "E", this);
             }
             else if (targetWell != null)
             {
@@ -312,11 +312,11 @@ namespace MoonlitHomestead
                     ? transform.position + playerHeadOffset
                     : targetWell.transform.position + targetWell.PromptOffset;
 
-                interactionPrompt.Show(promptPos, iconWater, targetWell.ActionName, targetWell.HotkeyText);
+                interactionPrompt.Show(promptPos, iconWater, targetWell.ActionName, targetWell.HotkeyText, this);
             }
             else
             {
-                interactionPrompt.Hide();
+                interactionPrompt.Hide(this);
             }
         }
 

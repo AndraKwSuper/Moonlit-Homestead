@@ -71,6 +71,12 @@ namespace MoonlitHomestead
             }
         }
 
+        public void RestoreStability(float amount = 100f)
+        {
+            CurrentStability = Mathf.Clamp(amount, 0f, maxStability);
+            OnStabilityChanged?.Invoke(CurrentStability, maxStability);
+        }
+
         private void HandleLoopReset(int loopIndex)
         {
             // Reset stabilitas tapi bisa dikurangi sedikit tiap loop untuk efek progressive horror

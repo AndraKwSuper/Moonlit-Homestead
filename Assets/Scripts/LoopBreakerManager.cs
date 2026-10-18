@@ -28,6 +28,12 @@ namespace MoonlitHomestead
             DontDestroyOnLoad(transform.root.gameObject);
         }
 
+        public void ResetState()
+        {
+            hasCrystal = false;
+            isLoopBroken = false;
+        }
+
         public void ObtainCrystal()
         {
             if (hasCrystal) return;

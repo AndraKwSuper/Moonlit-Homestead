@@ -53,7 +53,7 @@ namespace MoonlitHomestead
             if (isBroken)
             {
                 Vector3 promptPos = transform.position + promptOffset;
-                InteractionPromptUI.Instance.Show(promptPos, null, "Altar Terpecahkan", "");
+                InteractionPromptUI.Instance.Show(promptPos, null, "Altar Terpecahkan", "", this);
                 return;
             }
 
@@ -68,14 +68,14 @@ namespace MoonlitHomestead
             Sprite actionIcon = (hasCrystal && isTimeReady) ? breakLoopIcon : inspectIcon;
 
             Vector3 worldPos = transform.position + promptOffset;
-            InteractionPromptUI.Instance.Show(worldPos, actionIcon, actionLabel, "E");
+            InteractionPromptUI.Instance.Show(worldPos, actionIcon, actionLabel, "E", this);
         }
 
         private void HidePrompt()
         {
             if (InteractionPromptUI.Instance != null)
             {
-                InteractionPromptUI.Instance.Hide();
+                InteractionPromptUI.Instance.Hide(this);
             }
         }
 

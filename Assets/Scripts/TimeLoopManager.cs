@@ -165,5 +165,13 @@ namespace MoonlitHomestead
             CurrentMinute = 0f;
             OnTimeUpdated?.Invoke(CurrentHour, CurrentMinute);
         }
+
+        public void ResetToDawn()
+        {
+            isLoopFrozen = false;
+            isRewinding = false;
+            currentLoop = 1;
+            ResetDayTimer();
+        }
     }
 }
