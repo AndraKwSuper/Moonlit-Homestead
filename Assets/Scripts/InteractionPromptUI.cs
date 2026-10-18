@@ -36,6 +36,7 @@ namespace MoonlitHomestead
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(transform.root.gameObject);
 
             if (canvasGroup != null)
             {

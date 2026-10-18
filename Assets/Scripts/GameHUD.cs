@@ -37,6 +37,7 @@ namespace MoonlitHomestead
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(transform.root.gameObject);
 
             EnsureReferences();
         }

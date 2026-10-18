@@ -25,6 +25,7 @@ namespace MoonlitHomestead
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(transform.root.gameObject);
         }
 
         public void ObtainCrystal()
@@ -53,8 +54,8 @@ namespace MoonlitHomestead
                 return false;
             }
 
-            // Syarat waktu: Harus di ambang tengah malam (jam 23:55 ke atas)
-            bool isNearMidnight = (currentHour == 23 && currentMinute >= 50) || (currentHour >= 24);
+            // Syarat waktu: Cukup masuk jam 23:00 ke atas (window 1 jam game yang nyaman)
+            bool isNearMidnight = (currentHour >= 23);
 
             if (isNearMidnight)
             {

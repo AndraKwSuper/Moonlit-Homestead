@@ -43,6 +43,7 @@ namespace MoonlitHomestead
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(transform.root.gameObject);
         }
 
         private void Start()
@@ -131,15 +132,28 @@ namespace MoonlitHomestead
         public void TriggerTimeLoop()
         {
             if (isRewinding || isLoopFrozen) return;
-            isRewinding = true;
+            StartCoroutine(TimeLoopSequence());
+        }
 
+        private System.Collections.IEnumerator TimeLoopSequence()
+        {
+            isRewinding = true;
             currentLoop++;
             Debug.Log($"[TimeLoopManager] 00:00 Reached! Reality Collapsing. Starting Loop {currentLoop}...");
 
+            // Pemicu transisi visual layar (fade to black dimulai)
             OnLoopReset?.Invoke(currentLoop);
 
-            // Reset state
+            // Beri jeda 0.75 detik agar layar telah menjadi gelap pekat (fade-out selesai)
+            // sebelum reset jarum jam dan waktu kembali ke senja (18:00)
+            yield return new WaitForSeconds(0.75f);
+
+            // Reset timer jam setelah layar benar-benar hitam pekat agar pemain tidak melihat jarum jam melompat tiba-tiba
             ResetDayTimer();
+
+            // Tahan rewind selama sisa transisi gelap dan fade-in (~2.5 detik)
+            yield return new WaitForSeconds(2.5f);
+
             isRewinding = false;
         }
 

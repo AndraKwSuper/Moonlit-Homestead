@@ -12,6 +12,12 @@ namespace MoonlitHomestead
             set => safeRespawnPosition = value;
         }
 
+        public Vector3 RespawnPosition
+        {
+            get => safeRespawnPosition;
+            set => safeRespawnPosition = value;
+        }
+
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (other.CompareTag("Player") || other.GetComponent<PlayerController2D>() != null)

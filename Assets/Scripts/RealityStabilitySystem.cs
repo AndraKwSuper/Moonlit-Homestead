@@ -27,6 +27,7 @@ namespace MoonlitHomestead
             }
             Instance = this;
             CurrentStability = maxStability;
+            DontDestroyOnLoad(transform.root.gameObject);
         }
 
         private void Start()

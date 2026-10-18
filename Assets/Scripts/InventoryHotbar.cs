@@ -57,6 +57,7 @@ namespace MoonlitHomestead
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(transform.root.gameObject);
 
             // Default items jika belum diisi di Inspector
             if (items == null || items.Length == 0 || items[0] == null || (items[0].type == ItemType.None && string.IsNullOrEmpty(items[0].id)))

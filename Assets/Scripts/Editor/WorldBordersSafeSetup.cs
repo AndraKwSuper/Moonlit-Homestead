@@ -33,8 +33,8 @@ namespace MoonlitHomestead.Editor
             bordersParent.transform.position = Vector3.zero;
 
             // 2. Child Colliders
-            SetupBorderCollider(bordersParent.transform, "Border_Left", new Vector3(-13.8f, 2.5f, 0f), new Vector2(1f, 10f), false, false);
-            SetupBorderCollider(bordersParent.transform, "Border_Right", new Vector3(13.8f, 2.5f, 0f), new Vector2(1f, 10f), false, false);
+            SetupBorderCollider(bordersParent.transform, "Border_Left", new Vector3(-9f, 2.5f, 0f), new Vector2(1f, 10f), false, false);
+            SetupBorderCollider(bordersParent.transform, "Border_Right", new Vector3(9f, 2.5f, 0f), new Vector2(1f, 10f), false, false);
             SetupBorderCollider(bordersParent.transform, "Bottom_Fall_Trigger", new Vector3(0f, -6f, 0f), new Vector2(40f, 2f), true, true);
 
             // 3. Konfigurasi Kamera (Camera.main)
@@ -56,8 +56,8 @@ namespace MoonlitHomestead.Editor
                 Undo.RecordObject(follow, "Setup CameraFollow2D Boundaries");
                 follow.Offset = new Vector3(0f, 0.7f, -10f);
                 follow.SmoothTime = 0.15f;
-                follow.WorldMinX = -13.5f;
-                follow.WorldMaxX = 13.5f;
+                follow.WorldMinX = -9f;
+                follow.WorldMaxX = 9f;
                 follow.WorldMinY = -2.2f;
                 follow.WorldMaxY = 4.5f;
                 follow.ClampCamera = true;

@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
+    path: Assets/Scenes/Kebun.unity
+    guid: d3269d7cfe1d7724383117dfab7202f7
+  - enabled: 1
+    path: Assets/Scenes/AltarJam.unity
+    guid: e71891a924b174747b0a70f3f2601111
   m_configObjects: {}

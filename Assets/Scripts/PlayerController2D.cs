@@ -28,6 +28,8 @@ namespace MoonlitHomestead
         private static readonly int SpeedParam = Animator.StringToHash("Speed");
         private static readonly int IsGroundedParam = Animator.StringToHash("IsGrounded");
 
+        public static PlayerController2D Instance { get; private set; }
+
         public Vector2 FacingDirection { get; private set; } = Vector2.right;
         public bool IsGrounded => isGrounded;
         public bool IsMovementLocked => movementLockTimer > 0f;
@@ -47,6 +49,14 @@ namespace MoonlitHomestead
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(transform.root.gameObject);
+
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 3f;
             rb.freezeRotation = true;

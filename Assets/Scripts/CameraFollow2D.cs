@@ -97,8 +97,18 @@ namespace MoonlitHomestead
             set => worldMaxX = value;
         }
 
+        public static CameraFollow2D Instance { get; private set; }
+
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(transform.root.gameObject);
+
             cam = GetComponent<Camera>();
             if (target == null) FindPlayerTarget();
         }
